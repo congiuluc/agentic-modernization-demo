@@ -85,6 +85,7 @@
         <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% endif %}>.NET setup</a>
         <a href="{{ '/java/' | relative_url }}"{% if page.page_key == 'java' %} aria-current="page"{% endif %}>Java setup</a>
         <a href="{{ '/presentation/' | relative_url }}">Presentation <span aria-hidden="true">&nearr;</span></a>
+        <a href="{{ site.repository_url | append: '/tree/main' | escape }}" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository, main branch (opens in a new tab)">GitHub <span aria-hidden="true">&nearr;</span></a>
       </nav>
       <button class="theme-button ui-only" id="theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
     </div>

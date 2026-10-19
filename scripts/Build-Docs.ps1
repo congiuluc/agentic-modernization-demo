@@ -91,6 +91,6 @@ foreach ($file in @('_layouts/docs.html', 'assets/site.css', 'assets/site.js')) 
 }
 
 $config = Get-Content -Raw -LiteralPath (Join-Path $root 'docs\_config.yml')
-$config += "`nbaseurl: $($BasePath | ConvertTo-Json -Compress)`nurl: $($SiteUrl | ConvertTo-Json -Compress)`n"
+$config += "`nbaseurl: $($BasePath | ConvertTo-Json -Compress)`nurl: $($SiteUrl | ConvertTo-Json -Compress)`nrepository_url: $($repository | ConvertTo-Json -Compress)`n"
 Set-Content -LiteralPath (Join-Path $destination '_config.yml') -Encoding utf8NoBOM -Value $config
 Write-Host "Generated $($pages.Count) documentation pages and the HTML presentation in $destination"
