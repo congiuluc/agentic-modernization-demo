@@ -17,16 +17,17 @@ $destination = Join-Path $root '.pages-source'
 if (Test-Path -LiteralPath $destination) { Remove-Item -LiteralPath $destination -Recurse -Force }
 $repository = $RepositoryUrl.AbsoluteUri.TrimEnd('/')
 $pages = [ordered]@{
-    'README.md' = 'index.md'
+    'docs/MODERNIZATION.md' = 'index.md'
     'dotnet/README.md' = 'dotnet/index.md'
     'java/README.md' = 'java/index.md'
 }
 $aliases = @{
+    'README.md' = 'docs/MODERNIZATION.md'
     'dotnet' = 'dotnet/README.md'
     'java' = 'java/README.md'
 }
 $metadata = @{
-    'README.md' = @{ Title = 'Modernization field guide'; Key = 'home'; Section = 'The field guide'; Description = 'A hands-on guide to assess, plan, and modernize legacy .NET and Java applications with the GitHub Copilot modernization agent.' }
+    'docs/MODERNIZATION.md' = @{ Title = 'Modernization field guide'; Key = 'home'; Section = 'The field guide'; Description = 'A hands-on guide to assess, plan, and modernize legacy .NET and Java applications with the GitHub Copilot modernization agent.' }
     'dotnet/README.md' = @{ Title = '.NET Framework setup'; Key = 'dotnet'; Section = 'Application setup'; Description = 'Build, run, and verify the ASP.NET MVC 5 baseline. Windows, full Framework MSBuild, IIS Express, and SQL Server LocalDB are required.' }
     'java/README.md' = @{ Title = 'Java application setup'; Key = 'java'; Section = 'Application setup'; Description = 'Build, run, and verify the Java 11 Spring MVC baseline with Maven, Tomcat 9, and persistent H2 storage.' }
 }
