@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A presentation of the GitHub Copilot modernization agent and its application to this repository's .NET and Java blogs.">
+  <link rel="icon" href="data:,">
+  <title>GitHub Copilot modernization agent | Repository walkthrough</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 1rem; }
+    body { margin: 0; min-height: 100svh; display: flex; flex-direction: column; background: var(--cp-bg); color: var(--cp-text); font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.55; -webkit-tap-highlight-color: var(--cp-highlight); }
+    a { color: var(--cp-link); text-underline-offset: 0.2em; }
+    button, select { font: inherit; }
+    button, .button { border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 0.625rem 1rem; color: var(--cp-text); background: var(--cp-surface); cursor: pointer; text-decoration: none; }
+    button:hover, .button:hover { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
+    button:disabled { color: var(--cp-text-soft); cursor: not-allowed; background: var(--cp-surface-soft); }
+    button.primary, .button.primary { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+    button.primary:hover, .button.primary:hover { background: var(--cp-accent-hover); }
+    :focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 4px; }
+    button, a, summary { touch-action: manipulation; }
+    button[hidden] { display: none; }
+    .skip-link { position: fixed; top: 0.75rem; left: 1rem; z-index: 20; transform: translateY(-160%); padding: 0.75rem 1rem; background: var(--cp-surface); border: 1px solid var(--cp-accent); border-radius: 0.625rem; }
+    .skip-link:focus { transform: translateY(0); }
+    .requires-js { display: none; }
+    .js .requires-js { display: inline-flex; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem clamp(1rem, 4vw, 4rem); border-bottom: 1px solid var(--cp-border); background: var(--cp-bg-elevated); }
+    .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; font-weight: 750; letter-spacing: -0.02em; }
+    .brand svg { width: 1.75rem; height: 1.75rem; color: var(--cp-accent); }
+    .brand-secondary { display: block; color: var(--cp-text-soft); font-size: 0.75rem; font-weight: 500; letter-spacing: 0; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .toolbar button, .toolbar a { padding: 0.375rem 0.75rem; font-size: 0.8rem; }
+    .guide-button { display: inline-flex; align-items: center; gap: 0.375rem; color: var(--cp-text); border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); text-decoration: none; }
+    .guide-button:hover { color: var(--cp-accent); border-color: var(--cp-accent); }
+    .chapter-nav { display: none; align-items: center; gap: 0.5rem; padding: 0.625rem clamp(1rem, 4vw, 4rem); background: var(--cp-bg-elevated); border-bottom: 1px solid var(--cp-border); }
+    .js .chapter-nav { display: flex; }
+    .chapter-nav a { padding: 0.25rem 0.75rem; font-size: 0.75rem; color: var(--cp-text-soft); text-decoration: none; border-radius: 0.625rem; white-space: nowrap; }
+    .chapter-nav a span { font-family: Consolas, "Courier New", Courier, monospace; margin-right: 0.5rem; }
+    .chapter-nav a:hover, .chapter-nav a[aria-current="step"] { color: var(--cp-accent); background: var(--cp-accent-soft); }
+    .chapter-caption { margin-left: auto; font-size: 0.7rem; color: var(--cp-text-soft); }
+    main { flex: 1; width: 100%; }
+    .slide { max-width: 1360px; margin: 0 auto; padding: clamp(1.5rem, 3.5vw, 3.25rem); min-height: calc(100svh - 215px); display: flex; flex-direction: column; justify-content: center; }
+    .slide[hidden] { display: none; }
+    .slide:focus-visible { outline: none; }
+    .slide:focus-visible .eyebrow { text-decoration: underline; text-decoration-color: var(--cp-accent); text-decoration-thickness: 2px; text-underline-offset: 0.4em; }
+    .eyebrow { color: var(--cp-accent); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 1rem; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(2.5rem, 4.9vw, 4.5rem); line-height: 1.06; letter-spacing: -0.05em; margin-bottom: 1.5rem; text-wrap: balance; }
+    h2 { font-size: clamp(2rem, 3.5vw, 3.15rem); line-height: 1.12; letter-spacing: -0.04em; margin-bottom: 1rem; max-width: 1050px; text-wrap: balance; }
+    h3 { font-size: 1.15rem; line-height: 1.3; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
+    .lead { max-width: 900px; font-size: clamp(1.1rem, 1.5vw, 1.3rem); color: var(--cp-text-soft); margin-bottom: 1.5rem; text-wrap: pretty; }
+    .accent { color: var(--cp-accent); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hero { grid-template-columns: 1.4fr 1fr; align-items: center; gap: 3rem; }
+    .card { border: 1px solid var(--cp-border); border-radius: 16px; padding: 1.5rem; background: var(--cp-surface); box-shadow: 0 2px 3px var(--cp-highlight); min-width: 0; }
+    .card p { color: var(--cp-text-soft); }
+    .card > :last-child { margin-bottom: 0; }
+    .card.featured { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
+    .tag { display: inline-block; padding: 0.25rem 0.625rem; margin: 0 0.375rem 0.75rem 0; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--cp-border); border-radius: 0.625rem; color: var(--cp-text-soft); background: var(--cp-bg-elevated); }
+    .tag.accent { color: var(--cp-accent); border-color: var(--cp-accent); }
+    .number { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border: 1px solid var(--cp-accent); border-radius: 0.625rem; color: var(--cp-accent); background: var(--cp-accent-soft); font: 700 1rem Consolas, "Courier New", Courier, monospace; margin-bottom: 1rem; }
+    .pipeline { display: grid; gap: 0; }
+    .pipeline .card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; }
+    .pipeline .card.featured .number { color: var(--cp-accent-fg); background: var(--cp-accent); }
+    .pipeline-label { font-size: 0.65rem; color: var(--cp-text-soft); font-weight: 650; letter-spacing: 0.12em; margin-bottom: 1rem; }
+    .pipeline .number { flex-shrink: 0; margin: 0; }
+    .pipeline h3, .pipeline p { margin-bottom: 0; }
+    .connector { height: 2rem; width: 1px; background: var(--cp-accent); margin-left: 2.5rem; }
+    ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; }
+    li { margin-bottom: 0.625rem; }
+    li:last-child { margin-bottom: 0; }
+    .note { border-left: 3px solid var(--cp-accent); padding: 0.75rem 1rem; background: var(--cp-accent-soft); margin: 1.5rem 0 0; }
+    .small { font-size: 0.875rem; color: var(--cp-text-soft); }
+    code, pre { font-family: Consolas, "Courier New", Courier, monospace; }
+    code { font-size: 0.9em; overflow-wrap: anywhere; }
+    pre { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 1rem; color: var(--cp-text); font-size: 0.95rem; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0.75rem 0 1rem; }
+    .metric { display: block; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 750; line-height: 1.1; letter-spacing: -0.05em; color: var(--cp-accent); margin-bottom: 0.75rem; font-variant-numeric: tabular-nums; }
+    .row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+    .tabs { margin-bottom: 1rem; }
+    .tabs button[aria-pressed="true"] { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+    .steps { list-style: none; padding: 0; counter-reset: demo; }
+    .steps li { counter-increment: demo; display: flex; align-items: baseline; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--cp-border); margin: 0; }
+    .steps li::before { content: "0" counter(demo); color: var(--cp-accent); font-family: Consolas, "Courier New", Courier, monospace; font-weight: 700; }
+    .controls { position: sticky; bottom: 0; background: var(--cp-bg-elevated); border-top: 1px solid var(--cp-border); padding: 0.75rem clamp(1rem, 4vw, 4rem); }
+    .controls-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .counter { font-family: Consolas, "Courier New", Courier, monospace; min-width: 4.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+    .slide-context { display: grid; gap: 0.125rem; min-width: 0; }
+    #current-slide-title { font-size: 0.8rem; font-weight: 650; overflow-wrap: anywhere; }
+    .shortcut-hint { font-size: 0.7rem; }
+    progress { display: block; width: 100%; height: 3px; border: 0; margin-top: 0.75rem; background: var(--cp-border); accent-color: var(--cp-accent); }
+    progress::-webkit-progress-bar { background: var(--cp-border); }
+    progress::-webkit-progress-value { background: var(--cp-accent); }
+    progress::-moz-progress-bar { background: var(--cp-accent); }
+    dialog { width: min(680px, calc(100% - 2rem)); max-height: 85svh; overflow: auto; overscroll-behavior: contain; padding: 1.5rem; border: 1px solid var(--cp-border); border-radius: 16px; color: var(--cp-text); background: var(--cp-surface); }
+    dialog::backdrop { background: var(--cp-overlay); }
+    .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .dialog-heading h2 { font-size: 1.75rem; margin: 0; }
+    #slide-list { display: grid; gap: 0.5rem; }
+    #slide-list button { text-align: left; width: 100%; }
+    #slide-list button[aria-current="step"] { border-color: var(--cp-accent); color: var(--cp-accent); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    @media screen and (min-width: 761px) and (max-height: 800px) {
+      .slide { padding-top: 1.5rem; padding-bottom: 1.5rem; min-height: calc(100svh - 190px); }
+      .topbar { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+      .chapter-nav { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+      .controls { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      h1 { font-size: clamp(2.5rem, 4.5vw, 3.75rem); }
+      h2 { font-size: 2.35rem; }
+      .lead { font-size: 1.1rem; margin-bottom: 1rem; }
+      .eyebrow { margin-bottom: 0.75rem; }
+      .grid { gap: 1rem; }
+      .hero { gap: 2rem; }
+      .card { padding: 1.25rem; }
+      .pipeline .card { padding: 1rem; }
+      .note { margin-top: 1rem; padding: 0.625rem 0.875rem; }
+      pre { font-size: 0.875rem; padding: 0.875rem; }
+      li { margin-bottom: 0.375rem; }
+    }
+    @media (max-width: 760px) {
+      .grid, .grid.three, .hero { grid-template-columns: 1fr; gap: 1rem; }
+      .topbar { align-items: flex-start; flex-wrap: wrap; }
+      .brand { font-size: 0.75rem; }
+      .brand-secondary { font-size: 0.7rem; }
+      .toolbar { gap: 0.375rem; }
+      .toolbar button, .toolbar a { font-size: 0.75rem; }
+      .chapter-nav { gap: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; justify-content: space-between; }
+      .chapter-nav a { padding: 0.375rem 0.5rem; font-size: 0.7rem; }
+      .chapter-nav a span, .chapter-caption { display: none; }
+      .slide { min-height: auto; padding: 1.5rem 1rem 2rem; }
+      .card { padding: 1.25rem; }
+      .hero { gap: 1.5rem; }
+      .controls-inner { flex-wrap: wrap; }
+      .shortcut-hint { display: none; }
+      .slide-context { width: 100%; }
+      #current-slide-title { font-size: 0.75rem; }
+      .controls { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+      .controls button { font-size: 0.8rem; padding: 0.5rem 0.75rem; min-height: 44px; }
+      .controls .row { flex-wrap: nowrap; }
+      .counter { min-width: 4rem; font-size: 0.8rem; }
+      pre { font-size: 0.85rem; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      button, a { transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease; }
+    }
+    @media print {
+      @page { size: landscape; margin: 12mm; }
+      body { display: block; background: var(--cp-surface); }
+      .topbar, .chapter-nav, .controls, .skip-link, .pipeline-label, dialog, .requires-js { display: none !important; }
+      .slide, .slide[hidden] { display: block !important; min-height: auto; padding: 0; max-width: none; break-after: page; page-break-after: always; }
+      .slide:last-child { break-after: auto; page-break-after: auto; }
+      .app-example[hidden] { display: block !important; }
+      h1 { font-size: 32pt; } h2 { font-size: 26pt; } h3 { font-size: 15pt; }
+      .lead { font-size: 13pt; margin-bottom: 1rem; }
+      .card { padding: 1rem; box-shadow: none; break-inside: avoid; }
+      .grid, .grid.three, .hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      pre, p, li { font-size: 10pt; }
+      .note { margin-top: 1rem; }
+      .slide:focus-visible .eyebrow { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#deck">Skip to the slides</a>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 28 28" aria-hidden="true" fill="none">
+        <rect x="2" y="2" width="9" height="9" rx="2" stroke="var(--cp-accent)" stroke-width="2"/>
+        <rect x="17" y="17" width="9" height="9" rx="2" stroke="var(--cp-accent)" stroke-width="2"/>
+        <path d="M11 6h10v11M6 11v10h11" stroke="var(--cp-accent)" stroke-width="2"/>
+      </svg>
+      <span>Agentic Modernization<span class="brand-secondary">The repository walkthrough</span></span>
+    </div>
+    <div class="toolbar requires-js" aria-label="Presentation tools">
+      <a class="guide-button" data-guide-link href="../README.md">Field guide <span aria-hidden="true">&nearr;</span></a>
+      <button id="contents-button" type="button" aria-haspopup="dialog">Slides</button>
+      <button id="theme-button" type="button" aria-label="Switch color theme">Theme</button>
+      <button id="fullscreen-button" type="button">Fullscreen</button>
+      <button id="print-button" type="button">Print / PDF</button>
+    </div>
+  </header>
+  <nav class="chapter-nav" aria-label="Presentation chapters">
+    <a href="#slide-1" data-chapter="0"><span>01</span>Overview</a>
+    <a href="#slide-5" data-chapter="1"><span>02</span>Workflow</a>
+    <a href="#slide-10" data-chapter="2"><span>03</span>Automation</a>
+    <a href="#slide-13" data-chapter="3"><span>04</span>Demo</a>
+    <span class="chapter-caption">14 slides &middot; Built around this repository</span>
+  </nav>
+
+  <main id="deck" aria-label="Presentation slides" tabindex="-1">
+    <section class="slide" id="slide-1" data-title="Modernization with evidence" tabindex="-1" aria-labelledby="title-1">
+      <div class="grid hero">
+        <div>
+          <p class="eyebrow">A practical introduction &middot; 14 slides</p>
+          <h1 id="title-1">GitHub Copilot<br><span class="accent">modernization agent</span></h1>
+          <p class="lead">From understanding legacy code to proving a migration works. One governed workflow, applied to two real applications in this repository.</p>
+          <div><span class="tag">.NET Framework</span><span class="tag">Java / Spring MVC</span><span class="tag">Modernize CLI</span></div>
+          <p class="small">Practice repository, not a completed migration or a production template.</p>
+        </div>
+        <div class="pipeline" aria-label="Assess, plan, execute">
+          <div class="pipeline-label">THE MODERNIZATION LOOP</div>
+          <div class="card"><span class="number">01</span><div><h3>Assess</h3><p class="small">Understand the current application.</p></div></div>
+          <div class="connector" aria-hidden="true"></div>
+          <div class="card"><span class="number">02</span><div><h3>Plan</h3><p class="small">Choose targets and approve the path.</p></div></div>
+          <div class="connector" aria-hidden="true"></div>
+          <div class="card featured"><span class="number">03</span><div><h3>Execute</h3><p class="small">Transform, validate, and review.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-2" data-title="What the agent actually does" tabindex="-1" aria-labelledby="title-2">
+      <p class="eyebrow">01 / The agent</p>
+      <h2 id="title-2">More than a code-editing conversation.</h2>
+      <p class="lead">The Modernize CLI combines deterministic orchestration with Copilot-powered analysis and transformations.</p>
+      <div class="grid three">
+        <div class="card"><span class="number">A</span><h3>Understand</h3><p>Analyze code, configuration, dependencies, upgrade opportunities, and cloud readiness.</p></div>
+        <div class="card"><span class="number">P</span><h3>Structure</h3><p>Turn an approved goal into ordered tasks, compatibility decisions, and measurable success criteria.</p></div>
+        <div class="card"><span class="number">E</span><h3>Act</h3><p>Apply transformations, validate builds, remediate supported findings, and create a traceable change history.</p></div>
+      </div>
+      <p class="note">Interactive TUI for guided decisions. Headless CLI for repeatable automation. Reusable skills can encode organizational standards.</p>
+    </section>
+
+    <section class="slide" id="slide-3" data-title="Two applications, one behavior contract" tabindex="-1" aria-labelledby="title-3">
+      <p class="eyebrow">02 / This repository</p>
+      <h2 id="title-3">Two stacks. One behavior contract.</h2>
+      <p class="lead">Independent blog engines with equivalent publishing, authentication, and moderation workflows.</p>
+      <div class="grid">
+        <div class="card"><span class="tag accent">dotnet/</span><h3>ASP.NET MVC 5</h3><ul><li>.NET Framework 4.7.2 and Razor / System.Web.</li><li>Entity Framework 6 and SQL Server LocalDB.</li><li>Classic MSBuild and IIS Express.</li></ul><p class="small"><strong>Windows required</strong> for the legacy build and runtime.</p></div>
+        <div class="card"><span class="tag accent">java/</span><h3>Spring MVC 5</h3><ul><li>Java 11, Spring Security 5, Hibernate 5.</li><li>JSP views and persistent file-based H2.</li><li>Maven WAR deployed to Tomcat 9.</li></ul><p class="small"><strong>Not Spring Boot.</strong> Do not introduce it implicitly.</p></div>
+      </div>
+      <p class="note">Preserve public routes, drafts, pagination, admin CRUD, CSRF protection, comment approval, original logins, and persistent data.</p>
+    </section>
+
+    <section class="slide" id="slide-4" data-title="The governed modernization lifecycle" tabindex="-1" aria-labelledby="title-4">
+      <p class="eyebrow">03 / Control points</p>
+      <h2 id="title-4">Automate the work.<br>Keep the decisions explicit.</h2>
+      <div class="grid three">
+        <div class="card"><span class="number">01</span><h3>Assess</h3><p>Read the findings. Establish what is obsolete, incompatible, or unknown.</p><p class="small"><strong>Gate:</strong> confirm scope and evidence.</p></div>
+        <div class="card"><span class="number">02</span><h3>Plan</h3><p>Review target versions, dependency order, data handling, rollback, and tests.</p><p class="small"><strong>Gate:</strong> approve the plan before execution.</p></div>
+        <div class="card featured"><span class="number">03</span><h3>Execute</h3><p>Apply the approved changes, inspect the branch history, and run regression checks.</p><p class="small"><strong>Gate:</strong> review the PR before merging.</p></div>
+      </div>
+      <p class="note">The agent can create branches and commits. A successful build is necessary, but is not proof of behavioral or data compatibility.</p>
+    </section>
+
+    <section class="slide" id="slide-5" data-title="Install and authenticate across platforms" tabindex="-1" aria-labelledby="title-5">
+      <p class="eyebrow">04 / Get started</p>
+      <h2 id="title-5">One CLI. Your development platform.</h2>
+      <div class="grid">
+        <div class="card"><h3>Windows &middot; PowerShell</h3><pre><code>winget install GitHub.Copilot.modernization.agent</code></pre><p class="small">Use the documented MSI option if Winget is unavailable.</p></div>
+        <div class="card"><h3>Linux / macOS &middot; Bash or Zsh</h3><pre><code>brew tap microsoft/modernize https://github.com/microsoft/modernize-cli
+brew install modernize</code></pre><p class="small">Requires Homebrew. Other installation options are in the official quickstart.</p></div>
+      </div>
+      <pre><code>modernize --version
+gh --version
+gh auth login</code></pre>
+      <p class="small">Open a new terminal after installation. Requires Copilot access and GitHub CLI 2.45.0+. Install application toolchains separately; CLI portability does not make .NET Framework cross-platform.</p>
+    </section>
+
+    <section class="slide" id="slide-6" data-title="Start with a baseline and a bounded scope" tabindex="-1" aria-labelledby="title-6">
+      <p class="eyebrow">05 / Prepare the experiment</p>
+      <h2 id="title-6">One application. One branch. A known baseline.</h2>
+      <div class="grid">
+        <div class="card"><h3>Before asking the agent to act</h3><ol><li>Review local changes and create a dedicated branch.</li><li>Build and test the original application.</li><li>Record the baseline commit and back up data.</li><li>Use disposable data for migration experiments.</li></ol></div>
+        <div class="card">
+          <div class="row tabs requires-js" role="group" aria-label="Application example">
+            <button type="button" data-app-button="dotnet" aria-pressed="true">.NET example</button>
+            <button type="button" data-app-button="java" aria-pressed="false">Java example</button>
+          </div>
+          <div class="app-example" data-app="dotnet"><h3>.NET application</h3><pre><code>cd dotnet
+modernize</code></pre><p>Choose <strong>Assess &rarr; Current folder &rarr; Assess locally</strong>.</p></div>
+          <div class="app-example" data-app="java"><h3>Java application</h3><pre><code>cd java
+modernize</code></pre><p>Choose <strong>Assess &rarr; Current folder &rarr; Assess locally</strong>.</p></div>
+          <p class="small">Start either example from the repository root. Verify the agent targets only the selected application.</p>
+        </div>
+      </div>
+      <p class="note"><code>Assess locally</code> means execution on your machine, not offline processing. AI analysis can use GitHub services and consume Copilot requests.</p>
+    </section>
+
+    <section class="slide" id="slide-7" data-title="Assessment findings and outputs" tabindex="-1" aria-labelledby="title-7">
+      <p class="eyebrow">06 / Assess</p>
+      <h2 id="title-7">Map the risks before changing the code.</h2>
+      <div class="grid">
+        <div class="card"><h3>Look for</h3><ul><li>Runtime and framework upgrade opportunities.</li><li>Deprecated APIs and incompatible dependencies.</li><li>Cloud compatibility issues, if in scope.</li><li>Codebase insights when full analysis is selected.</li></ul><p class="small">Available assessment domains and language coverage vary; review the installed CLI's options.</p></div>
+        <div class="card"><h3>Keep the output reviewable</h3><pre><code>.github/modernize/assessment/</code></pre><p>Review reports, assumptions, missing tooling, and unverified behavior.</p><p class="small">Generated state is ignored by Git in this repository. Preserve approved decisions in maintained documentation.</p></div>
+      </div>
+      <pre><code>modernize assess --source java --output-path reports --format markdown --delegate local --no-tty</code></pre>
+      <p class="small">Headless example from the repository root; one command on Windows, Linux, or macOS. Custom output directories need their own ignore/retention policy.</p>
+    </section>
+
+    <section class="slide" id="slide-8" data-title="Turn an assessment into an approved plan" tabindex="-1" aria-labelledby="title-8">
+      <p class="eyebrow">07 / Plan</p>
+      <h2 id="title-8">A target version is not a migration plan.</h2>
+      <p class="lead">Choose <strong>Create modernization plan &rarr; Keep the plan local</strong>. Replace the default Azure migration goal with the actual scope.</p>
+      <div class="grid">
+        <div class="card"><h3>.NET: decide the migration boundary</h3><p>Compare an in-place Framework upgrade with a supported .NET LTS / ASP.NET Core migration.</p><ul><li>System.Web and OWIN replacements.</li><li>Project format, Razor, and configuration changes.</li><li>EF/database and Identity hash compatibility.</li></ul></div>
+        <div class="card"><h3>Java: choose a compatible stack</h3><p>Align the JDK, Spring, Security, Hibernate, Servlet/JSP APIs, H2, and container.</p><ul><li>Resolve javax versus jakarta consistently.</li><li>Preserve WAR packaging unless explicitly changed.</li><li>Do not silently introduce Spring Boot.</li></ul></div>
+      </div>
+      <p class="note">Inspect <code>.github/modernize/{plan-name}/plan.md</code>. Approve targets, task order, data strategy, rollback, and measurable gates before executing.</p>
+    </section>
+
+    <section class="slide" id="slide-9" data-title="Execute and prove behavior" tabindex="-1" aria-labelledby="title-9">
+      <p class="eyebrow">08 / Execute and validate</p>
+      <h2 id="title-9">The strongest output is evidence.</h2>
+      <p class="lead">Execute the approved plan, inspect all branch changes, then prove routes, forms, permissions, publication dates, and persistent data still work.</p>
+      <div class="grid three">
+        <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and IIS Express / LocalDB restart persistence.</p></div>
+        <div class="card"><span class="metric">67</span><h3>Java assertions</h3><p>Actual Java 11 / Tomcat 9, JSP rendering, correct 405 responses, and container-replacement persistence.</p></div>
+        <div class="card"><span class="metric">31</span><h3>Wrapper checks</h3><p>Offline checks on Windows and Linux, including explicit errors and rejection of linked assessment inputs.</p></div>
+      </div>
+      <p class="small" style="margin-top: 1rem;">Local verification snapshot: 19 October 2026. Hosted GitHub/Azure DevOps execution, paid live assessments, and native macOS execution remain unverified.</p>
+    </section>
+
+    <section class="slide" id="slide-10" data-title="Separate regression CI from optional AI assessment" tabindex="-1" aria-labelledby="title-10">
+      <p class="eyebrow">09 / Continuous validation</p>
+      <h2 id="title-10">Two lanes. Different responsibilities.</h2>
+      <div class="grid">
+        <div class="card featured"><span class="tag accent">Every pull request</span><h3>Regression validation</h3><p><code>.github/workflows/validate.yml</code></p><ul><li>No Copilot credential or paid assessment.</li><li>Builds, HTTP checks, complete restarts.</li><li>Training-fixture exclusion and docs build.</li></ul><p class="small">Configure branch rules to require the checks.</p></div>
+        <div class="card"><span class="tag">Explicit opt-in</span><h3>Modernization assessment</h3><p>Manual runs, matching <code>main</code> pushes, or Monday 06:00 UTC schedules.</p><ul><li>Copilot-enabled secret required.</li><li>Assessment reports as CI artifacts.</li><li>No plan execution, code upgrades, or deployments.</li></ul><p class="small">Automatic runs require <code>MODERNIZATION_ASSESSMENT_ENABLED=true</code>.</p></div>
+      </div>
+      <pre><code>pwsh -File scripts/Test-ApplicationBaseline.ps1 -App Java</code></pre>
+      <p class="small">Local regression example. Java requires Maven, a JDK, and Docker. For .NET on Windows, use <code>-App DotNet</code>; add <code>-Restore</code> when packages need restoring.</p>
+    </section>
+
+    <section class="slide" id="slide-11" data-title="GitHub Actions and Azure DevOps reuse" tabindex="-1" aria-labelledby="title-11">
+      <p class="eyebrow">10 / Reusable automation</p>
+      <h2 id="title-11">Two CI platforms.<br>One assessment implementation.</h2>
+      <div class="grid">
+        <div class="card"><h3>GitHub Actions</h3><pre><code>.github/workflows/
+  modernization-assessment.yml
+  modernization-assessment-template.yml</code></pre><p>Choose <strong>dotnet</strong>, <strong>java</strong>, or <strong>all</strong> on manual dispatch. Download the run's assessment artifacts.</p></div>
+        <div class="card"><h3>Azure DevOps</h3><pre><code>.azdo/
+  modernization-assessment.yml
+  templates/modernization-assessment.yml</code></pre><p>Select the YAML pipeline, provide its secret, and enable the manual run or the automatic opt-in variable.</p></div>
+      </div>
+      <p class="note">Both call <code>scripts/Invoke-ModernizationAssessment.ps1</code>. Copy the shared script with the chosen templates when reusing them in another repository.</p>
+    </section>
+
+    <section class="slide" id="slide-12" data-title="Security boundaries and training fixtures" tabindex="-1" aria-labelledby="title-12">
+      <p class="eyebrow">11 / Security and governance</p>
+      <h2 id="title-12">Make the boundaries visible.</h2>
+      <div class="grid">
+        <div class="card"><h3>Protect assessment execution</h3><ul><li>Use <code>MODERNIZE_GH_TOKEN</code>; CI job tokens are not Copilot credentials.</li><li>Do not run credentialed assessments on PR events.</li><li>Pin the CLI; verify release checksums.</li><li>Reject linked inputs and stale report directories.</li><li>Review report access and retention; public artifacts are not confidential storage.</li></ul></div>
+        <div class="card"><h3>Learn without weakening the apps</h3><p>Source-only C# and Java exercises demonstrate:</p><div><span class="tag">CWE-89 &middot; SQL concatenation</span><span class="tag">CWE-79 &middot; raw HTML</span><span class="tag">CWE-759 / 328 &middot; MD5</span></div><p>They have no routes or startup registration and are excluded from the assembly and WAR.</p><p class="small">Project-only scanners may not inspect excluded files. Select them explicitly for source-review training.</p></div>
+      </div>
+      <p class="note">Use synthetic data only. Normal application paths retain ORM/parameterized queries, encoded output, CSRF protection, and framework password hashing.</p>
+    </section>
+
+    <section class="slide" id="slide-13" data-title="A practical demonstration sequence" tabindex="-1" aria-labelledby="title-13">
+      <p class="eyebrow">12 / Demo sequence</p>
+      <h2 id="title-13">Show the process, not just the prompt.</h2>
+      <div class="grid">
+        <div class="card"><ol class="steps"><li>Open the repo and explain the two application boundaries.</li><li>Run a disposable baseline and show the restart checks.</li><li>Start <code>modernize</code> in one application folder.</li><li>Assess locally and inspect the generated findings.</li><li>Generate a plan; review compatibility and data decisions.</li><li>After approval, execute, compare the branch, and rerun regressions.</li></ol></div>
+        <div class="card featured"><h3>A useful planning constraint</h3><pre><code>Modernize only the selected application.
+Preserve existing routes and behavior.
+Keep data and original logins intact.
+Do not add Azure services or deploy.
+Stop after planning for my approval.</code></pre><p>Then show the optional CI assessment template and the separate PR regression workflow.</p><p class="small">Assessment and execution time depend on the app, tools, model availability, and service access. Prepare the toolchain and a database backup before a live demo.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-14" data-title="Next steps and official references" tabindex="-1" aria-labelledby="title-14">
+      <p class="eyebrow">13 / Take it forward</p>
+      <h2 id="title-14">Start small.<br><span class="accent">Make every change provable.</span></h2>
+      <p class="lead">Establish a baseline, assess one app, approve a bounded plan, and let regression evidence decide when the work is ready to merge.</p>
+      <div class="grid">
+        <div class="card"><h3>Apply it to this repository</h3><ul><li>Follow the maintained README and app setup guides.</li><li>Require PR validation checks through branch rules.</li><li>Enable paid assessments only after credential and usage approval.</li><li>Treat Azure migration as a separate, explicit decision.</li></ul><a class="button primary" id="guide-link" data-guide-link href="../README.md">Open the repository guide</a></div>
+        <div class="card"><h3>Official sources</h3><ul><li><a href="https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/overview" target="_blank" rel="noopener noreferrer">Modernization agent overview</a></li><li><a href="https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart" target="_blank" rel="noopener noreferrer">Install and use the agent</a></li><li><a href="https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/cli-commands" target="_blank" rel="noopener noreferrer">Modernize CLI commands</a></li><li><a href="https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess" target="_blank" rel="noopener noreferrer">Batch and non-interactive assessment</a></li></ul><p class="small">Product capabilities can evolve. Follow the current official documentation and installed CLI help.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls requires-js" aria-label="Slide navigation">
+    <div style="width: 100%;">
+      <div class="controls-inner">
+        <div class="slide-context"><span id="current-slide-title"></span><span class="small shortcut-hint">Arrow keys / Space &middot; Home / End &middot; Print for all slides</span></div>
+        <div class="row">
+          <button id="previous-button" type="button" aria-label="Previous slide">&larr; Previous</button>
+          <span id="counter" class="counter" role="status" aria-live="polite" aria-atomic="true"></span>
+          <button id="next-button" class="primary" type="button" aria-label="Next slide">Next &rarr;</button>
+        </div>
+      </div>
+      <progress id="progress" max="14" value="1" aria-label="Presentation progress"></progress>
+    </div>
+  </footer>
+
+  <dialog id="contents-dialog" aria-labelledby="contents-title">
+    <div class="dialog-heading"><h2 id="contents-title">Jump to a slide</h2><button id="close-contents" type="button" aria-label="Close slide list">Close</button></div>
+    <nav id="slide-list" aria-label="All slides"></nav>
+  </dialog>
+  <p class="sr-only" id="tool-status" role="status" aria-live="polite"></p>
+  <noscript><p class="note">JavaScript is disabled. All slides are shown below one another; browser printing still works.</p></noscript>
+
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const previous = document.getElementById("previous-button");
+      const next = document.getElementById("next-button");
+      const counter = document.getElementById("counter");
+      const progress = document.getElementById("progress");
+      const dialog = document.getElementById("contents-dialog");
+      const slideList = document.getElementById("slide-list");
+      const themeButton = document.getElementById("theme-button");
+      const fullscreenButton = document.getElementById("fullscreen-button");
+      const chapterStarts = [0, 4, 9, 12];
+      let index = 0;
+      let printTheme;
+      window.addEventListener("beforeprint", () => {
+        printTheme = document.documentElement.dataset.theme;
+        document.documentElement.dataset.theme = "light";
+      });
+      window.addEventListener("afterprint", () => {
+        if (printTheme) document.documentElement.dataset.theme = printTheme;
+        printTheme = undefined;
+      });
+
+      function showSlide(requested, focus = true) {
+        index = Math.max(0, Math.min(slides.length - 1, requested));
+        slides.forEach((slide, position) => { slide.hidden = position !== index; });
+        previous.disabled = index === 0;
+        next.disabled = index === slides.length - 1;
+        counter.textContent = `${String(index + 1).padStart(2, "0")} / ${slides.length}`;
+        progress.max = slides.length;
+        progress.value = index + 1;
+        document.getElementById("current-slide-title").textContent = slides[index].dataset.title;
+        const chapter = chapterStarts.findLastIndex(start => index >= start);
+        document.querySelectorAll("[data-chapter]").forEach((link, position) => {
+          if (position === chapter) link.setAttribute("aria-current", "step");
+          else link.removeAttribute("aria-current");
+        });
+        slideList.querySelectorAll("button").forEach((button, position) => {
+          if (position === index) button.setAttribute("aria-current", "step");
+          else button.removeAttribute("aria-current");
+        });
+        history.replaceState(null, "", `#slide-${index + 1}`);
+        document.title = `${index + 1}/${slides.length} ${slides[index].dataset.title} | Copilot modernization`;
+        if (focus) {
+          slides[index].focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
+      }
+
+      function readHash() {
+        const match = /^#slide-(\d+)$/.exec(location.hash);
+        const requested = match ? Number(match[1]) - 1 : 0;
+        showSlide(Number.isSafeInteger(requested) ? requested : 0, false);
+      }
+
+      slides.forEach((slide, position) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = `${String(position + 1).padStart(2, "0")}  ${slide.dataset.title}`;
+        button.addEventListener("click", () => { dialog.close(); showSlide(position); });
+        slideList.appendChild(button);
+      });
+
+      previous.addEventListener("click", () => showSlide(index - 1));
+      next.addEventListener("click", () => showSlide(index + 1));
+      document.getElementById("contents-button").addEventListener("click", () => {
+        dialog.showModal();
+        slideList.querySelector('[aria-current="step"]').focus();
+      });
+      document.getElementById("close-contents").addEventListener("click", () => dialog.close());
+      document.getElementById("print-button").addEventListener("click", () => window.print());
+      themeButton.addEventListener("click", () => {
+        const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = theme;
+        const url = new URL(location.href);
+        url.searchParams.set("scoutTheme", theme);
+        history.replaceState(null, "", url);
+        updateThemeButton();
+      });
+
+      function updateThemeButton() {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        themeButton.textContent = `${nextTheme[0].toUpperCase()}${nextTheme.slice(1)} theme`;
+        themeButton.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+        if (location.protocol !== "file:") {
+          const guide = new URL("../", location.href);
+          guide.searchParams.set("scoutTheme", document.documentElement.dataset.theme);
+          document.querySelectorAll("[data-guide-link]").forEach(link => { link.href = guide.href; });
+        }
+      }
+
+      if (!document.fullscreenEnabled) fullscreenButton.hidden = true;
+      fullscreenButton.addEventListener("click", async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await document.documentElement.requestFullscreen();
+        } catch (error) {
+          document.getElementById("tool-status").textContent = `Fullscreen unavailable: ${error.message}`;
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        fullscreenButton.textContent = document.fullscreenElement ? "Exit fullscreen" : "Fullscreen";
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (dialog.open || event.altKey || event.ctrlKey || event.metaKey ||
+            event.target.closest("a, button, input, textarea, select, [contenteditable]")) return;
+        const actions = {
+          ArrowRight: () => showSlide(index + 1),
+          ArrowLeft: () => showSlide(index - 1),
+          PageDown: () => showSlide(index + 1),
+          PageUp: () => showSlide(index - 1),
+          " ": () => showSlide(index + (event.shiftKey ? -1 : 1)),
+          Home: () => showSlide(0),
+          End: () => showSlide(slides.length - 1)
+        };
+        if (actions[event.key]) { event.preventDefault(); actions[event.key](); }
+      });
+
+      function selectApp(application) {
+        document.querySelectorAll("[data-app]").forEach((example) => {
+          example.hidden = example.dataset.app !== application;
+        });
+        document.querySelectorAll("[data-app-button]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.appButton === application));
+        });
+      }
+      document.querySelectorAll("[data-app-button]").forEach((button) => {
+        button.addEventListener("click", () => selectApp(button.dataset.appButton));
+      });
+      window.addEventListener("hashchange", readHash);
+      document.documentElement.classList.add("js");
+      selectApp("dotnet");
+      updateThemeButton();
+      readHash();
+    })();
+  </script>
+</body>
+</html>

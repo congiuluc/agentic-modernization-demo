@@ -1,0 +1,6 @@
+@model CategoryForm
+<h1>@(ViewBag.Id == null ? "New category" : "Edit category")</h1>
+<form class="editor card" method="post">@Html.AntiForgeryToken()@Html.ValidationSummary(false)
+<label for="Name">Name</label>@Html.TextBoxFor(m => m.Name, new { maxlength = 100, required = "required" })
+<label for="Slug">Slug</label>@Html.TextBoxFor(m => m.Slug, new { maxlength = 150, pattern = "[a-z0-9]+(-[a-z0-9]+)*", required = "required" })
+<div class="actions"><button type="submit">Save category</button><a href="/admin/categories">Cancel</a></div></form>

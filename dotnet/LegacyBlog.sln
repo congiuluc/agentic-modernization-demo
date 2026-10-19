@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31911.196
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{349C5851-65DF-11DA-9384-00065B846F21}") = "LegacyBlog", "LegacyBlog\LegacyBlog.csproj", "{A37A9EA4-CBB5-405B-A228-C68E7ABED982}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A37A9EA4-CBB5-405B-A228-C68E7ABED982}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{A37A9EA4-CBB5-405B-A228-C68E7ABED982}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{A37A9EA4-CBB5-405B-A228-C68E7ABED982}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{A37A9EA4-CBB5-405B-A228-C68E7ABED982}.Release|Any CPU.Build.0 = Release|AnyCPU
+	EndGlobalSection
+EndGlobal

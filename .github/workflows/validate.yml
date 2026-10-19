@@ -1,0 +1,81 @@
+name: Validate repository
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  assessment-wrapper:
+    name: Assessment wrapper (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run offline regression checks
+        shell: pwsh
+        run: ./scripts/Test-ModernizationAssessment.ps1
+
+  application-baseline:
+    name: Application baseline (${{ matrix.application }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - application: DotNet
+            os: windows-2022
+          - application: Java
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Java build toolchain
+        if: matrix.application == 'Java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+          cache: maven
+      - name: Build and test a disposable application
+        shell: pwsh
+        env:
+          APPLICATION: ${{ matrix.application }}
+        run: ./scripts/Test-ApplicationBaseline.ps1 -App $env:APPLICATION -Restore
+
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Prepare documentation
+        shell: pwsh
+        run: |
+          ./scripts/Build-Docs.ps1 `
+            -RepositoryUrl "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY" `
+            -Revision $env:GITHUB_SHA `
+            -BasePath '/validation'
+      - name: Build documentation without publishing
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: .pages-source
+          destination: _site

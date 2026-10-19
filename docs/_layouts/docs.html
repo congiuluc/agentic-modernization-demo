@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page.description | default: site.description | escape }}">
+  <link rel="icon" href="data:,">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <title>{{ page.title | escape }} | {{ site.title | escape }}</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+  </style>
+  <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
+  <script defer src="{{ '/assets/site.js' | relative_url }}"></script>
+</head>
+<body>
+  <a class="skip-link" href="#document">Skip to the guide</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="Agentic Modernization home">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="2" stroke="var(--cp-accent)" stroke-width="2"/><rect x="18" y="18" width="10" height="10" rx="2" stroke="var(--cp-accent)" stroke-width="2"/><path d="M12 7h11v11M7 12v11h11" stroke="var(--cp-accent)" stroke-width="2"/></svg>
+        <span>Agentic<span class="brand-secondary">Modernization</span></span>
+      </a>
+      <nav class="primary-nav" aria-label="Primary navigation">
+        <a href="{{ '/' | relative_url }}"{% if page.page_key == 'home' %} aria-current="page"{% endif %}>Field guide</a>
+        <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% endif %}>.NET setup</a>
+        <a href="{{ '/java/' | relative_url }}"{% if page.page_key == 'java' %} aria-current="page"{% endif %}>Java setup</a>
+        <a href="{{ '/presentation/' | relative_url }}">Presentation <span aria-hidden="true">&nearr;</span></a>
+      </nav>
+      <button class="theme-button ui-only" id="theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
+    </div>
+  </header>
+  <main id="main">
+    <section class="page-hero{% if page.page_key == 'home' %} home-hero{% endif %}" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">GitHub Copilot modernization <span aria-hidden="true">/</span> {{ page.section | escape }}</p>
+        {% if page.page_key == 'home' %}
+        <h1 id="page-title">Modernize with intent.<br><span>Prove every change.</span></h1>
+        {% else %}
+        <h1 id="page-title">{{ page.title | escape }}</h1>
+        {% endif %}
+        <p class="hero-description">{{ page.description | escape }}</p>
+        <div class="hero-actions">
+          <a class="button primary" href="{% if page.page_key == 'home' %}#modernization-workflow{% else %}#document{% endif %}">{% if page.page_key == 'home' %}Start the workflow{% else %}Open the setup guide{% endif %} <span aria-hidden="true">&rarr;</span></a>
+          <a class="button secondary" href="{{ '/presentation/' | relative_url }}">View presentation <span aria-hidden="true">&nearr;</span></a>
+        </div>
+        <p class="hero-caption">A practice workspace. A reviewable process. Not a completed migration.</p>
+      </div>
+      {% if page.page_key == 'home' %}
+      <div class="workspace-card" aria-label="Repository at a glance">
+        <div class="workspace-heading"><span class="workspace-mark" aria-hidden="true"></span> YOUR MODERNIZATION WORKSPACE <code>01</code></div>
+        <div class="stack-card"><span class="stack-symbol">.NET</span><div><strong>Framework 4.7.2</strong><p>MVC 5 &middot; EF 6 &middot; IIS Express</p></div><span class="platform-tag">Windows</span></div>
+        <div class="stack-card"><span class="stack-symbol">JAVA</span><div><strong>Java 11</strong><p>Spring MVC &middot; Hibernate &middot; Tomcat</p></div><span class="platform-tag">WAR</span></div>
+        <div class="workspace-flow"><span>Assess</span><span aria-hidden="true">&rarr;</span><span>Plan</span><span aria-hidden="true">&rarr;</span><strong>Execute</strong></div>
+        <p class="workspace-caption">One application at a time. Human approval at every decision boundary.</p>
+      </div>
+      {% endif %}
+    </section>
+    <div class="document-layout">
+      <article class="docs-body" id="document" tabindex="-1" aria-label="{{ page.title | escape }}">
+        {{ content | replace: '<table>', '<div class="table-scroll" role="region" aria-label="Reference table" tabindex="0"><table>' | replace: '</table>', '</table></div>' }}
+      </article>
+      <aside class="contents-panel" aria-label="Guide navigation">
+        <details id="contents-panel" open>
+          <summary>On this page</summary>
+          <nav id="page-contents" aria-label="On this page"><a href="#page-title">Overview</a><a href="#document">Read the guide</a></nav>
+        </details>
+        <div class="sidebar-note"><p class="eyebrow">Source-first docs</p><p>This guide comes directly from the repository. Generated assessment reports stay out of the public site.</p><a href="{{ page.source_url | escape }}" target="_blank" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+      </aside>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <a class="footer-brand" href="{{ '/' | relative_url }}">Agentic Modernization</a>
+    <p>Assess carefully. Plan explicitly. Validate continuously.</p>
+    <a href="#page-title">Back to top <span aria-hidden="true">&uarr;</span></a>
+  </footer>
+  <p id="ui-status" class="sr-only" role="status" aria-live="polite"></p>
+</body>
+</html>

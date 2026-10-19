@@ -1,0 +1,45 @@
+dotnet/packages/
+**/bin/
+**/obj/
+**/target/
+.vs/
+.idea/
+*.user
+*.suo
+*.log
+*.mv.db
+*.trace.db
+.local/
+
+# Generated GitHub Pages source and site
+.pages-source/
+_site/
+
+# GitHub Copilot modernization reports and session state
+**/.github/appmod/
+**/.github/upgrades/
+**/.github/modernize/*
+!**/.github/modernize/playbook/
+
+# Local environment files (keep shareable templates)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# SQL Server local database files
+*.mdf
+*.ndf
+*.ldf
+*.jfm
+
+# IDE user settings
+*.iml
+*.sln.docstates
+*.csproj.user
+*.pubxml.user
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

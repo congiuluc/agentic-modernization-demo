@@ -1,0 +1,77 @@
+parameters:
+  - name: jobName
+    type: string
+  - name: applicationPath
+    type: string
+  - name: language
+    type: string
+    values: [dotnet, java]
+  - name: vmImage
+    type: string
+    default: windows-latest
+  - name: enabled
+    type: boolean
+    default: false
+  - name: cliVersion
+    type: string
+    default: 1.0.76
+  - name: assessmentConfig
+    type: string
+    default: ''
+
+jobs:
+  - job: ${{ parameters.jobName }}
+    displayName: Assess ${{ parameters.applicationPath }}
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(${{ parameters.enabled }}, eq(variables['MODERNIZATION_ASSESSMENT_ENABLED'], 'true')))
+    timeoutInMinutes: 60
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: self
+        persistCredentials: false
+
+      - ${{ if eq(parameters.language, 'dotnet') }}:
+          - task: UseDotNet@2
+            displayName: Set up assessment .NET SDK
+            inputs:
+              packageType: sdk
+              version: 8.0.x
+
+      - ${{ if eq(parameters.language, 'java') }}:
+          - task: JavaToolInstaller@0
+            displayName: Set up Java
+            inputs:
+              versionSpec: '11'
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+
+      - task: PowerShell@2
+        displayName: Run assessment only
+        inputs:
+          targetType: inline
+          pwsh: true
+          workingDirectory: $(Build.SourcesDirectory)
+          script: |
+            $output = Join-Path $env:AGENT_TEMPDIRECTORY "modernization-$env:ASSESSMENT_NAME"
+            New-Item -ItemType Directory -Force -Path $output | Out-Null
+            ./scripts/Invoke-ModernizationAssessment.ps1 `
+              -AppPath $env:APPLICATION_PATH `
+              -OutputPath $output `
+              -AssessmentConfig $env:ASSESSMENT_CONFIG `
+              -CliVersion $env:CLI_VERSION `
+              -InstallCli
+        env:
+          GH_TOKEN: $(MODERNIZE_GH_TOKEN)
+          COPILOT_GITHUB_TOKEN: $(MODERNIZE_GH_TOKEN)
+          GH_PROMPT_DISABLED: '1'
+          ASSESSMENT_NAME: ${{ parameters.jobName }}
+          APPLICATION_PATH: ${{ parameters.applicationPath }}
+          ASSESSMENT_CONFIG: ${{ parameters.assessmentConfig }}
+          CLI_VERSION: ${{ parameters.cliVersion }}
+
+      - task: PublishPipelineArtifact@1
+        displayName: Publish assessment reports
+        condition: succeededOrFailed()
+        inputs:
+          targetPath: $(Agent.TempDirectory)/modernization-${{ parameters.jobName }}
+          artifact: modernization-assessment-${{ parameters.jobName }}

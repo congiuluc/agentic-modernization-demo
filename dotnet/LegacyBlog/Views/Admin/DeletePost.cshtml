@@ -1,0 +1,3 @@
+@model Post
+<section class="card narrow"><h1>Delete story?</h1><p>@Model.Title</p><p>This permanently deletes the post and its comments.</p>
+<form method="post">@Html.AntiForgeryToken()<button class="danger" type="submit">Delete post</button> <a href="/admin/posts">Cancel</a></form></section>

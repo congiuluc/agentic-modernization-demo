@@ -1,0 +1,6 @@
+@model LoginForm
+<section class="narrow card"><h1>Welcome back.</h1><p>Sign in to your writing desk.</p>
+<form id="login-form" class="editor" method="post" action="/account/login">@Html.AntiForgeryToken()@Html.ValidationSummary(false)@Html.HiddenFor(m => m.ReturnUrl)
+<label for="Username">Username</label>@Html.TextBoxFor(m => m.Username, new { maxlength = 64, autocomplete = "username", required = "required" })
+<label for="Password">Password</label>@Html.PasswordFor(m => m.Password, new { autocomplete = "current-password", required = "required" })
+<button type="submit">Sign in</button></form></section>

@@ -1,0 +1,49 @@
+parameters:
+  - name: enabled
+    displayName: Enable this assessment run
+    type: boolean
+    default: false
+  - name: application
+    displayName: Application to assess
+    type: string
+    default: all
+    values: [all, dotnet, java]
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include:
+      - dotnet/**
+      - java/**
+      - ci/assessment/**
+      - scripts/Invoke-ModernizationAssessment.ps1
+      - .azdo/**
+
+pr: none
+
+schedules:
+  - cron: '0 6 * * 1'
+    displayName: Weekly assessment
+    branches:
+      include: [main]
+    always: true
+
+jobs:
+  - ${{ if or(eq(parameters.application, 'all'), eq(parameters.application, 'dotnet')) }}:
+      - template: templates/modernization-assessment.yml
+        parameters:
+          jobName: dotnet
+          applicationPath: dotnet
+          language: dotnet
+          vmImage: windows-latest
+          enabled: ${{ parameters.enabled }}
+
+  - ${{ if or(eq(parameters.application, 'all'), eq(parameters.application, 'java')) }}:
+      - template: templates/modernization-assessment.yml
+        parameters:
+          jobName: java
+          applicationPath: java
+          language: java
+          vmImage: ubuntu-latest
+          enabled: ${{ parameters.enabled }}

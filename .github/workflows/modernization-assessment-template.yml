@@ -1,0 +1,88 @@
+name: Reusable modernization assessment
+
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: boolean
+        default: true
+      application-path:
+        type: string
+        required: true
+      language:
+        type: string
+        required: true
+      runner:
+        type: string
+        default: windows-latest
+      cli-version:
+        type: string
+        default: 1.0.76
+      assessment-config:
+        type: string
+        default: ''
+      artifact-name:
+        type: string
+        default: modernization-assessment
+    secrets:
+      copilot-token:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  assess:
+    if: inputs.enabled && github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    steps:
+      - name: Check out application repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up assessment .NET SDK
+        if: inputs.language == 'dotnet'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Set up Java
+        if: inputs.language == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Run assessment only
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.copilot-token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.copilot-token }}
+          GH_PROMPT_DISABLED: '1'
+          APPLICATION_PATH: ${{ inputs.application-path }}
+          APPLICATION_LANGUAGE: ${{ inputs.language }}
+          ASSESSMENT_CONFIG: ${{ inputs.assessment-config }}
+          CLI_VERSION: ${{ inputs.cli-version }}
+        run: |
+          if ($env:APPLICATION_LANGUAGE -notin @('dotnet', 'java')) {
+            throw 'language must be dotnet or java.'
+          }
+          $output = Join-Path $env:RUNNER_TEMP 'modernization-assessment'
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          ./scripts/Invoke-ModernizationAssessment.ps1 `
+            -AppPath $env:APPLICATION_PATH `
+            -OutputPath $output `
+            -AssessmentConfig $env:ASSESSMENT_CONFIG `
+            -CliVersion $env:CLI_VERSION `
+            -InstallCli
+
+      - name: Upload assessment reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ runner.temp }}/modernization-assessment
+          if-no-files-found: warn
+          retention-days: 7

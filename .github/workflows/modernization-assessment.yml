@@ -1,0 +1,48 @@
+name: Assess applications
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: Application to assess
+        type: choice
+        options: [all, dotnet, java]
+        default: all
+  push:
+    branches: [main]
+    paths:
+      - dotnet/**
+      - java/**
+      - ci/assessment/**
+      - scripts/Invoke-ModernizationAssessment.ps1
+      - .github/workflows/modernization-assessment*.yml
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: modernization-assessment-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    if: github.event_name == 'workflow_dispatch' || vars.MODERNIZATION_ASSESSMENT_ENABLED == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - application: dotnet
+            runner: windows-latest
+          - application: java
+            runner: ubuntu-latest
+    uses: ./.github/workflows/modernization-assessment-template.yml
+    with:
+      enabled: ${{ github.event_name != 'workflow_dispatch' || inputs.application == 'all' || inputs.application == matrix.application }}
+      application-path: ${{ matrix.application }}
+      language: ${{ matrix.application }}
+      runner: ${{ matrix.runner }}
+      artifact-name: modernization-assessment-${{ matrix.application }}
+    secrets:
+      copilot-token: ${{ secrets.MODERNIZE_GH_TOKEN }}

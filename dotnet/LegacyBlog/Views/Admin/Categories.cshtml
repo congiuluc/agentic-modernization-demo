@@ -1,0 +1,9 @@
+@model List<Category>
+<div class="section-heading"><h1>Categories</h1><a class="button" href="/admin/categories/create">New category</a></div>
+@if (ViewBag.Error != null) { <p class="errors">@ViewBag.Error</p> }
+@foreach (var category in Model) {
+    <article class="card admin-row" data-category-id="@category.Id"><div><h2>@category.Name</h2><code>@category.Slug</code></div>
+    <div class="actions"><a href="/admin/categories/@category.Id/edit">Edit</a>
+    <form class="inline" method="post" action="/admin/categories/@category.Id/delete">@Html.AntiForgeryToken()<button class="danger" type="submit">Delete</button></form></div></article>
+}
+@if (Model.Count == 0) { <p class="empty">No categories yet.</p> }
