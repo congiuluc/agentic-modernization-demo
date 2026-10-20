@@ -3,7 +3,7 @@
 <nav class="categories" aria-label="Categories"><a href="/">All stories</a>@foreach (var item in Model.Categories) { <a href="/categories/@item.Slug">@item.Name</a> }</nav>
 @if (Model.Category != null) { <h2>@Model.Category.Name</h2> }
 <div class="post-grid">@foreach (var post in Model.Posts) {
-    <article class="card post-card"><div class="meta">@post.Category.Name / <time datetime="@(post.PublishedAt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture))Z">@post.PublishedAt.Value.ToString("yyyy-MM-dd HH:mm") UTC</time></div>
+    <article class="card post-card"><div class="meta">@post.Category.Name / <time datetime="@(post.PublishedAt.GetValueOrDefault().ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture))Z">@post.PublishedAt.GetValueOrDefault().ToString("yyyy-MM-dd HH:mm") UTC</time></div>
     <h2><a href="/posts/@post.Slug">@post.Title</a></h2><p class="excerpt">@post.Body</p><a class="read-more" href="/posts/@post.Slug">Read story &rarr;</a></article>
 }</div>
 @if (Model.Posts.Count == 0) { <p class="empty">No published stories yet.</p> }
