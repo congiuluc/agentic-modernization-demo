@@ -23,6 +23,12 @@
     {
       "type": "setupBaseline",
       "id": "002-setupBaseline",
+      "status": "failed",
+      "taskSummary": "The original application was inspected at baseline commit 495ebc0263443dcd488cca69d86dace0132336e5, but the baseline agent could not write the frozen test bundle or run its build and tests because its session prohibited file output. No baseline artifacts were created.",
+      "successCriteriaStatus": {
+        "passBuild": "false",
+        "passUnitTests": "false"
+      },
       "description": "Capture the current blog's behavior and external dependency decisions before migration. Addresses issues: SQL database connection detected, Windows authentication detected (LocalDB integrated SQL authentication).",
       "reason": "A frozen behavior specification is needed to compare the upgraded app and its SQLite-backed integration tests with the source application.",
       "requirements": "Use the built-in create-test-baseline skill. Snapshot the main source folder LegacyBlog relative to the project root, and use the existing baseline runner and blog flows to record relevant public, admin, authentication, persistence, and error behavior. Freeze the test cases, test data, and infra-decision-table in the baseline bundle. Record SQL Server LocalDB as a source dependency and SQLite as the agreed integration-test substitute; do not alter source or require Azure infrastructure.",
