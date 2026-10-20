@@ -24,7 +24,7 @@
       "type": "setupBaseline",
       "id": "002-setupBaseline",
       "status": "failed",
-      "taskSummary": "The original application was inspected at baseline commit 495ebc0263443dcd488cca69d86dace0132336e5, but the baseline agent could not write the frozen test bundle or run its build and tests because its session prohibited file output. No baseline artifacts were created.",
+      "taskSummary": "Retried baseline capture from pre-migration commit 495ebc0263443dcd488cca69d86dace0132336e5. The baseline agent again could not write the frozen test-case bundle; no baseline artifacts were created, and the original build and tests were not run.",
       "successCriteriaStatus": {
         "passBuild": "false",
         "passUnitTests": "false"

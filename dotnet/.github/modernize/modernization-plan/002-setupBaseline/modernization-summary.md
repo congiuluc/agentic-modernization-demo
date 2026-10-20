@@ -2,5 +2,5 @@
 
 - finalStatus: failed
 - successCriteriaStatus: passBuild=false, passUnitTests=false
-- summary: Inspected the original application at baseline commit 495ebc0263443dcd488cca69d86dace0132336e5 and identified SQL Server LocalDB with integrated authentication. The baseline agent's session prohibited writing the frozen baseline artifacts; no test-case bundle was created and the baseline build and tests were not run.
-- failureReason: Baseline agent could not write output files in its session.
+- summary: Retried baseline capture using the original application at commit 495ebc0263443dcd488cca69d86dace0132336e5. The baseline agent still could not write the frozen test-case bundle; no artifacts were created, and the original build and tests were not run.
+- failureReason: Baseline agent could not write the required baseline artifacts in its session.
