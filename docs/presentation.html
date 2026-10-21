@@ -84,7 +84,7 @@
     .skip-link:focus { transform: translateY(0); }
     .requires-js { display: none; }
     .js .requires-js { display: inline-flex; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem clamp(1rem, 4vw, 4rem); border-bottom: 1px solid var(--cp-border); background: var(--cp-surface); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem clamp(1rem, 4vw, 4rem); color: var(--cp-text); border-bottom: 1px solid rgba(255, 255, 255, 0.24); background: linear-gradient(110deg, #123d75, #343d8c 62%, #0e596b); box-shadow: 0 4px 18px rgba(7, 30, 67, 0.16); --cp-text: #ffffff; --cp-text-soft: #e0ecff; --cp-accent: #ffffff; --cp-accent-hover: #ffffff; --cp-accent-soft: rgba(255, 255, 255, 0.14); --cp-border: rgba(255, 255, 255, 0.28); --cp-surface: rgba(255, 255, 255, 0.08); }
     .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; font-weight: 750; letter-spacing: -0.02em; }
     .brand svg { width: 1.75rem; height: 1.75rem; color: var(--cp-accent); }
     .brand-secondary { display: block; color: var(--cp-text-soft); font-size: 0.75rem; font-weight: 500; letter-spacing: 0; }
@@ -97,6 +97,7 @@
     .chapter-nav a { padding: 0.25rem 0.75rem; font-size: 0.75rem; color: var(--cp-text-soft); text-decoration: none; border-radius: 0.625rem; white-space: nowrap; }
     .chapter-nav a span { font-family: Consolas, "Courier New", Courier, monospace; margin-right: 0.5rem; }
     .chapter-nav a:hover, .chapter-nav a[aria-current="step"] { color: var(--cp-accent); background: var(--cp-accent-soft); }
+    .chapter-nav a[aria-current="step"] { color: var(--cp-accent-fg); background: var(--cp-accent); }
     .chapter-caption { margin-left: auto; font-size: 0.7rem; color: var(--cp-text-soft); }
     main { flex: 1; width: 100%; }
     .slide { max-width: 1360px; margin: 0 auto; padding: clamp(1.5rem, 3.5vw, 3.25rem); min-height: calc(100svh - 215px); display: flex; flex-direction: column; justify-content: center; }
