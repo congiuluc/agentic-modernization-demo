@@ -19,16 +19,19 @@ Choose your path through the repository:
 | Your goal | Start with |
 | --- | --- |
 | Understand the agent and this repository | [14-slide HTML presentation](presentation.html) |
-| Assess and modernize one application | [Guided modernization workflow](#modernization-workflow) |
+| Modernize the .NET application | [.NET modernization](DOTNET-MODERNIZATION.md) |
+| Modernize the Java application | [Java modernization](JAVA-MODERNIZATION.md) |
+| Understand the shared CLI stages | [Guided modernization workflow](#modernization-workflow) |
+| Use a browser-based modernization workspace | [GitHub Codespaces](#using-github-codespaces) |
 | Customize assessment coverage and targets | [Optional assessment configuration](#optional-assessment-configuration) |
-| Build and run the original applications | [.NET setup](../dotnet/README.md) or [Java setup](../java/README.md) |
+| Optionally prepare the original applications | [.NET setup](../dotnet/README.md) or [Java setup](../java/README.md), also linked as the first step in each modernization guide |
 | Run assessments automatically | [GitHub Actions and Azure DevOps templates](#optional-automated-assessment) |
 | Verify changes before merging | [Required regression checks](#required-regression-checks) |
 | Practice finding security issues safely | [Isolated source-only exercises](#intentional-security-exercises-source-only) |
 
 > **Practice workspace, not a completed migration.** The [verification status](#verification-status) records what has actually been checked. Runtime upgrades come first; Azure migration and deployment are optional, separately approved work.
 
-The applications are independent, feature-equivalent blogs: ASP.NET MVC 5 on .NET Framework 4.7.2 and Spring MVC on Java 11. The workflow uses the **Modernize CLI**, not the IDE extension's chat commands. This guide and the setup guides are also published through [GitHub Pages](#documentation-website-github-pages).
+The applications are independent, feature-equivalent blogs: ASP.NET MVC 5 on .NET Framework 4.7.2 and Spring MVC on Java 11. The workflow uses the **Modernize CLI**, not the IDE extension's chat commands. This field guide, the application-specific modernization workflows, and the linked optional setup guides are also published through [GitHub Pages](#documentation-website-github-pages).
 
 <details>
 <summary><strong>Presenting this repository</strong></summary>
@@ -51,6 +54,41 @@ VS Code is optional for reviewing and editing the generated plan; its modernizat
 
 **Shell conventions:** shared `sh` command blocks below use commands that also work in Windows PowerShell. Run `powershell` blocks in PowerShell 7 on any OS, except the Windows-only installer. Run `bash` blocks in Bash/Zsh on Linux/macOS. Choose an application from the repository root, then keep the same PowerShell 7 terminal and application folder for assessment, planning, and execution. Return to the repository root for regression checks.
 
+### Using GitHub Codespaces
+
+> **Codespaces is optional and is an alternative to your local environment.** You can complete the same Modernize CLI workflow locally with the prerequisites above; no Codespaces account or subscription is required for local execution.
+
+[Open a modernization Codespace](https://codespaces.new/congiuluc/agentic-modernization-demo), or select **Code -> Codespaces -> Create codespace** on the branch containing the [development container configuration](../.devcontainer/devcontainer.json). The configuration must be pushed to that branch before GitHub can use it. Wait for container setup to finish and open a new terminal; PowerShell 7 is selected by default.
+
+The container is a **modernization workspace**, not an automatic application deployment:
+
+| Included tool | Purpose |
+| --- | --- |
+| .NET 10 SDK | Uses the official .NET dev-container feature with `version: 10.0`; resolves the current .NET 10 SDK servicing release when the image is built without moving to a newer major version. .NET 10 is the latest stable .NET major version at this guide's update; no preview/daily SDK is requested. |
+| .NET 8 SDK | Additional compatibility toolchain for assessment tooling and explicitly selected .NET 8 targets. Installing it does not change project target frameworks. |
+| JDK 27 (default), JDK 11, Maven 3.9.16 | Temurin JDK 27 is the default toolchain; JDK 11 remains installed for baseline compatibility. Maven is pinned to a Java-11-compatible release. Installing JDK 27 does not retarget the application or approve an upgrade. Align the target JDK, frameworks, and container in the plan. |
+| Modernize CLI 1.0.76 | Installed from the official release with SHA-256 archive verification, matching the assessment automation's pinned CLI version. |
+| GitHub CLI and PowerShell 7 | Authentication/repository operations and the guide's cross-platform commands. |
+| Docker-in-Docker | Provides an isolated Docker daemon for the optional disposable Java baseline runner. It requires a privileged development container; no application container is started during setup. |
+
+Check the installed tools with `modernize --version`, `dotnet --list-sdks`, `java -version`, and `mvn --version`. The setup also reports their versions. Use **Codespaces: Rebuild Container** when you change the configuration or want to resolve newer tool versions; a cached build or existing Codespace does not continuously update itself. No repository-wide SDK pin or application upgrade is introduced by the container.
+
+**Authentication:** run `gh auth status` to check repository access. Codespaces normally supplies a repository-scoped `GITHUB_TOKEN`; that token is **not** a Copilot-enabled credential. For this workflow, add an organization-approved fine-grained PAT owned by a Copilot-enabled account as a **Codespaces secret named `COPILOT_GITHUB_TOKEN`**, with the **Copilot Requests** account permission and any necessary repository/organization authorization. Grant the secret access only to this repository and create or restart the Codespace so it is available. Do not echo the token or commit it. See the current [Copilot authentication documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/authenticate-copilot-cli) and your organization's policies.
+
+The setup does not authenticate, call AI services, assess source, execute plans, create commits, provision Azure resources, or start either application. Continue at [Establish a baseline](#2-establish-a-baseline), then run the explicit assessment and planning commands. The `local` delegate means execution **inside the Codespace**; it does not mean offline processing or a separate Copilot cloud-agent job.
+
+For the original **Java baseline**, run this from the repository root only when you choose to record regression evidence:
+
+```powershell
+pwsh -File .\scripts\Test-ApplicationBaseline.ps1 -App Java
+```
+
+The runner builds the WAR with the selected build JDK and its existing `--release 11` setting, then starts a disposable Java 11/Tomcat 9 container and database volume, checks HTTP behavior and restart persistence, and cleans up. JDK 27 is the default build JDK in Codespaces; select the installed JDK 11 through SDKMAN or `JAVA_HOME` if recording an exact Java 11 build baseline. Neither cross-compilation nor the Java 11 container proves JDK 27 runtime compatibility. Run `docker info` first if Docker is unavailable and inspect the container setup logs; do not count an unexecuted check as passing. Use the approved target toolchain and adapted validation commands after modernization.
+
+**Windows boundary:** Codespaces uses Linux even when your own computer runs Windows. .NET code analysis/planning can be attempted with the available tooling, but findings that depend on unavailable Framework tools remain unverified. The legacy .NET Framework build, IIS Express, and LocalDB checks must run on Windows. Installing the .NET 10 SDK does not remove that boundary.
+
+No application ports are automatically forwarded. Keep any manually forwarded test ports private; never publish these legacy samples. Codespaces compute/storage and Copilot requests have separate quotas or charges. Commit intended source/documentation changes before deleting a Codespace, but keep tokens, databases, reports, and build artifacts out of commits.
+
 ## Modernization workflow
 
 **The short version:** establish a baseline, then run these three CLI commands for one application. No interactive menu navigation is required.
@@ -64,6 +102,8 @@ VS Code is optional for reviewing and editing the generated plan; its modernizat
 The steps below provide copy-and-paste commands with application-specific goals and the assessment report as planning input. Run execution separately, only after approval; do not replace these stages with `modernize upgrade`, which combines planning and execution.
 
 ### 1. Install and authenticate the agent
+
+**Codespaces:** the tools are already installed. Follow [Codespaces authentication](#using-github-codespaces), then continue to step 2; do not run the local installers below.
 
 **Windows (PowerShell):** install using Winget:
 
@@ -163,11 +203,7 @@ Pass the file explicitly with `--assess-config`; do not assume the CLI loads an 
 | `dotnet.assessmentDomains` | List of strings; `framework-upgrade`, `cloud-readiness` | Selects the .NET assessment domains. `framework-upgrade` evaluates framework/runtime upgrade compatibility. `cloud-readiness` evaluates Azure migration readiness; it does not provision resources or authorize deployment. For an upgrade-only assessment, keep only `framework-upgrade`. |
 | `dotnet.targetRuntime` | String; for example `net10.0` | Target framework moniker used for the upgrade assessment. `net10.0` means .NET 10. Choose a target supported by your CLI and check application/dependency compatibility; this setting does not retarget the project or approve the plan. |
 
-**Minimal Java example:** save this as `modernize.yaml` in the Java application folder and use the same `--assess-config` command from there. It requests full analysis while leaving language-specific settings at the CLI's defaults:
-
-```yaml
-analysisCoverage: full
-```
+For Java, use the separate [optional Java YAML example](#optional-java-yaml-for-modernize-cli) below rather than copying the .NET settings.
 
 The official assessment documentation also describes these language-specific settings. The display names below are **not YAML property names**; use the configuration emitted by your installed CLI, when available, for the exact version-specific keys rather than guessing them:
 
@@ -190,11 +226,41 @@ The official assessment documentation also describes these language-specific set
 | `--model` | A model ID from `modernize help models` | Overrides model selection for the assessment. Availability and request usage depend on your account. |
 | `--no-tty` | Switch | Disables terminal interaction for automation. Ensure all inputs are supplied before using it in CI. |
 
-For CI, pass the repository-relative YAML path through `assessment-config` in the [GitHub Actions template](../.github/workflows/modernization-assessment-template.yml), `assessmentConfig` in the [Azure DevOps template](../.azdo/templates/modernization-assessment.yml), or `-AssessmentConfig` when invoking the [shared runner](../scripts/Invoke-ModernizationAssessment.ps1). For example, the .NET path is `dotnet\modernize.yaml`; the runner resolves it from the repository root and passes it as an absolute `--assess-config` path.
+For CI, pass the repository-relative YAML path through `assessment-config` in the [GitHub Actions template](../.github/workflows/modernization-assessment-template.yml), `assessmentConfig` in the [Azure DevOps template](../.azdo/templates/modernization-assessment.yml), or `-AssessmentConfig` when invoking the [shared runner](../scripts/Invoke-ModernizationAssessment.ps1). For example, use `dotnet\modernize.yaml` for .NET or `java\modernize.yaml` for Java; the runner resolves it from the repository root and passes it as an absolute `--assess-config` path.
 
 Keep credentials, connection strings, tokens, and real database contents out of assessment configuration. Keep the reviewed YAML in source control when you need reproducible settings; generated reports and agent state remain ignored.
 
 These examples document the fields used by this demo, not an exhaustive, version-independent YAML schema. The [official assessment guide](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess), [CLI README](https://github.com/microsoft/modernize-cli#assess), and `modernize assess --help` are the references for your installed version. The current CLI README also documents discovery of `.github/modernize/assessment/reports/assessment-config.yaml`; passing `--assess-config` explicitly avoids depending on that discovery behavior.
+
+### Optional Java YAML for Modernize CLI
+
+The [Java assessment configuration](../java/modernize.yaml) is ready to use and contains only the shared analysis-coverage setting:
+
+```yaml
+analysisCoverage: full
+```
+
+| Parameter | Value | Effect |
+| --- | --- | --- |
+| `analysisCoverage` | `full` | Requests issue analysis and the six codebase-insight areas: architecture, API contracts, configuration, business workflows, dependencies, and data model. It does not automatically enable every assessment domain. |
+
+**From the Java application folder**, replace the default assessment command with:
+
+```powershell
+modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+```
+
+**Alternatively, from the repository root**, specify both paths:
+
+```powershell
+modernize assess --source .\java --assess-config .\java\modernize.yaml --format markdown --delegate local
+```
+
+Run only one assessment variant. The file is optional; omit `--assess-config` to use the CLI's default/discovered assessment settings. Continue with the report-selection step above and [plan generation](#4-generate-and-approve-a-plan) after reviewing the findings.
+
+This minimal example deliberately leaves Java-specific domains and assessment targets at the CLI's defaults. Do not add a `dotnet` section or guess Java YAML property names: obtain version-specific fields from the installed CLI's generated configuration when available.
+
+**JDK 27 is a toolchain choice, not a YAML side effect.** The Codespace has JDK 27 selected by default and retains JDK 11 for baseline compatibility. This file neither changes the application's Java 11 compiler target nor establishes JDK 27 compatibility. If JDK 27 is your intended modernization target, state that in the [Java planning goal](#java-planning-goal), check framework/container compatibility and CLI target support, and approve the plan before execution.
 
 ### 4. Generate and approve a plan
 
@@ -526,15 +592,16 @@ Bind the servers to loopback. Local HTTP cookies are intentionally usable withou
 - **Framework:** 4.7.2-targeted Release build on the installed Framework 4.8.1 runtime and **66 passing HTTP/form/restart assertions** using disposable IIS Express/LocalDB resources.
 - **Java:** Maven WAR build using the installed JDK 21 with `--release 11`, followed by **67 passing HTTP/form/restart assertions** on actual **Java 11/Tomcat 9** in Docker, including JSP rendering.
 - **Automation:** **31 offline assessment-wrapper checks** pass on Windows and in a native Linux filesystem; CI also runs them on macOS. Built artifacts exclude the vulnerable training namespace/classes. The linked-path tests require a writable checkout.
-- **Not verified locally:** hosted GitHub Actions/Azure DevOps runs, paid live assessments, and native macOS execution. These checks do not certify the intentionally legacy dependency lines as production-safe.
+- **Not verified locally:** hosted GitHub Actions/Azure DevOps runs, a hosted Codespaces/container build, paid live assessments, and native macOS execution. These checks do not certify the intentionally legacy dependency lines as production-safe.
 
 ## Documentation website (GitHub Pages)
 
-The [Publish documentation workflow](../.github/workflows/pages.yml) builds and deploys a Jekyll site with three guides and a presentation:
+The [Publish documentation workflow](../.github/workflows/pages.yml) builds and deploys a Jekyll site with five guides and a presentation:
 
 - This guide as the site's main modernization page.
-- The [Framework setup](../dotnet/README.md).
-- The [Java setup](../java/README.md).
+- The [.NET modernization workflow](DOTNET-MODERNIZATION.md), published at `dotnet/`.
+- The [Java modernization workflow](JAVA-MODERNIZATION.md), published at `java/`.
+- The optional [Framework setup](../dotnet/README.md) and [Java setup](../java/README.md), linked from step 1 of their modernization workflows and published at `dotnet/setup/` and `java/setup/`.
 - The self-contained [HTML presentation](presentation.html), published at the site's `presentation/` path.
 
 The [documentation build script](../scripts/Build-Docs.ps1) generates the site source from those files, so documentation changes only need to be made once. Links between the guides stay within the site, while source-file links point to the corresponding GitHub commit. Repository-specific Pages URL prefixes are handled automatically.
@@ -550,7 +617,7 @@ Subsequent documentation changes pushed to `main` trigger publication automatica
 
 The site uses a custom [documentation layout](_layouts/docs.html), [stylesheet](assets/site.css), and [progressive-enhancement script](assets/site.js). It includes a responsive navigation bar with a GitHub link to the repository's `main` branch, light/dark themes, an active table of contents, keyboard focus/skip links, and copy controls for code examples. The repository link follows the repository URL supplied to the build. The presentation shares the same visual language while keeping all its styles and scripts inside a single offline-capable file.
 
-The site title and description are configured in [_config.yml](_config.yml). The build stages only the three maintained guides, the presentation, the layout/assets, and site configuration; application source, build outputs, databases, and modernization session state are not copied. The generated site source is recreated on every build to avoid retaining stale assets. Generated source and HTML are ignored by Git; authored layouts, assets, and the presentation remain tracked.
+The site title and description are configured in [_config.yml](_config.yml). The build stages only the five maintained guides, the presentation, the layout/assets, and site configuration; application source, build outputs, databases, and modernization session state are not copied. The generated site source is recreated on every build to avoid retaining stale assets. Generated source and HTML are ignored by Git; authored layouts, assets, and the presentation remain tracked.
 
 The workflow builds on a GitHub-hosted Linux runner using PowerShell 7 and the official Jekyll/Pages actions. No local Ruby installation is required to publish the site.
 

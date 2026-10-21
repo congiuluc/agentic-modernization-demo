@@ -18,8 +18,10 @@ if (Test-Path -LiteralPath $destination) { Remove-Item -LiteralPath $destination
 $repository = $RepositoryUrl.AbsoluteUri.TrimEnd('/')
 $pages = [ordered]@{
     'docs/MODERNIZATION.md' = 'index.md'
-    'dotnet/README.md' = 'dotnet/index.md'
-    'java/README.md' = 'java/index.md'
+    'docs/DOTNET-MODERNIZATION.md' = 'dotnet/index.md'
+    'docs/JAVA-MODERNIZATION.md' = 'java/index.md'
+    'dotnet/README.md' = 'dotnet/setup/index.md'
+    'java/README.md' = 'java/setup/index.md'
 }
 $aliases = @{
     'README.md' = 'docs/MODERNIZATION.md'
@@ -27,9 +29,11 @@ $aliases = @{
     'java' = 'java/README.md'
 }
 $metadata = @{
-    'docs/MODERNIZATION.md' = @{ Title = 'Modernization field guide'; Key = 'home'; Section = 'The field guide'; Description = 'A hands-on guide to assess, plan, and modernize legacy .NET and Java applications with the GitHub Copilot modernization agent.' }
-    'dotnet/README.md' = @{ Title = '.NET Framework setup'; Key = 'dotnet'; Section = 'Application setup'; Description = 'Build, run, and verify the ASP.NET MVC 5 baseline. Windows, full Framework MSBuild, IIS Express, and SQL Server LocalDB are required.' }
-    'java/README.md' = @{ Title = 'Java application setup'; Key = 'java'; Section = 'Application setup'; Description = 'Build, run, and verify the Java 11 Spring MVC baseline with Maven, Tomcat 9, and persistent H2 storage.' }
+    'docs/MODERNIZATION.md' = @{ Title = 'Modernization field guide'; Key = 'home'; Section = 'The field guide'; Action = 'Start the workflow'; Description = 'A hands-on guide to assess, plan, and modernize legacy .NET and Java applications with the GitHub Copilot modernization agent.' }
+    'docs/DOTNET-MODERNIZATION.md' = @{ Title = '.NET modernization'; Key = 'dotnet'; Section = 'Application modernization'; Action = 'Start modernization'; Description = 'Assess, plan, approve, execute, and validate the .NET blog modernization with Modernize CLI. Legacy setup is an optional first step.' }
+    'docs/JAVA-MODERNIZATION.md' = @{ Title = 'Java modernization'; Key = 'java'; Section = 'Application modernization'; Action = 'Start modernization'; Description = 'Assess, plan, approve, execute, and validate the Java blog modernization with Modernize CLI. Legacy setup is an optional first step.' }
+    'dotnet/README.md' = @{ Title = '.NET Framework setup'; Key = 'dotnet-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build, run, and verify the ASP.NET MVC 5 baseline. Windows, full Framework MSBuild, IIS Express, and SQL Server LocalDB are required.' }
+    'java/README.md' = @{ Title = 'Java application setup'; Key = 'java-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build, run, and verify the Java 11 Spring MVC baseline with Maven, Tomcat 9, and persistent H2 storage.' }
 }
 
 foreach ($page in $pages.GetEnumerator()) {
@@ -76,6 +80,7 @@ foreach ($page in $pages.GetEnumerator()) {
         "description: $($details.Description | ConvertTo-Json -Compress)"
         "section: $($details.Section | ConvertTo-Json -Compress)"
         "page_key: $($details.Key)"
+        "action_label: $($details.Action | ConvertTo-Json -Compress)"
         "source_url: $("$repository/blob/$Revision/$($page.Key)" | ConvertTo-Json -Compress)"
     ) -join "`n"
     Set-Content -LiteralPath $output -Encoding utf8NoBOM -Value "---`n$frontMatter`n---`n`n$content"

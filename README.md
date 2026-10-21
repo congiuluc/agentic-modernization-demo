@@ -6,9 +6,21 @@ The goal is **Assess -> Plan -> Approve -> Execute -> Validate**, not simply to 
 
 > **Practice repository, not a completed migration or production template.** Azure migration and deployment are optional, separately approved steps. Running the original app is only a supporting activity for baseline and regression validation.
 
+## Optional: open in Codespaces
+
+> **Codespaces is optional, not a requirement.** Use it as an alternative to your local environment. The same Modernize CLI workflow works locally with the documented prerequisites.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/congiuluc/agentic-modernization-demo)
+
+The [development container](.devcontainer/devcontainer.json) provides **Modernize CLI, .NET 10 SDK, and JDK 27 (default)**, plus .NET 8, JDK 11 for baseline compatibility, Maven, PowerShell 7, GitHub CLI, and Docker. The SDK's `10.0` setting follows .NET 10 servicing releases, not future major versions; no preview SDK is requested. Rebuild the container to refresh the toolchain.
+
+Wait for setup to finish, then follow the CLI workflow below in the default PowerShell terminal. Setup does **not** authenticate, assess, execute plans, launch the apps, or expose application ports automatically.
+
+**Java-first workspace:** Codespaces runs Linux. The .NET 10 SDK supports modern .NET targets, not the legacy .NET Framework/MSBuild, IIS Express, or LocalDB baseline; validate that baseline on Windows. Preinstalled JDK 27 is a toolchain option, not an approved application upgrade. See [Codespaces authentication, validation, and limitations](docs/MODERNIZATION.md#using-github-codespaces) before starting.
+
 ## Modernize an application
 
-Install the [Modernize CLI and prerequisites](docs/MODERNIZATION.md#prerequisites), then follow the commands below. No IDE extension or menu navigation is required.
+Install the [Modernize CLI and prerequisites](docs/MODERNIZATION.md#prerequisites) locally, or use the optional Codespaces environment above, then follow the commands below. No IDE extension or menu navigation is required.
 
 Work on a dedicated branch for **one application**. Before making changes, record its [baseline](docs/MODERNIZATION.md#2-establish-a-baseline) and back up its data. Keep the other application unchanged.
 
@@ -18,12 +30,14 @@ From the repository root in **PowerShell 7**, authenticate, choose one applicati
 
 ```powershell
 modernize --version
-gh auth login
+gh auth status
 Set-Location java
 modernize assess --format markdown --delegate local
 ```
 
 For .NET, use `Set-Location dotnet` instead. Its legacy build/runtime validation requires **Windows**. Keep the same terminal and application folder through planning and execution.
+
+If GitHub CLI is not authenticated locally, run `gh auth login`. In Codespaces, repository access is usually already configured, but the automatic token is not a Copilot credential: follow the [Codespaces authentication steps](docs/MODERNIZATION.md#using-github-codespaces).
 
 Review the findings under `.github/modernize/assessment/`. To customize coverage or targets, use the [optional YAML configuration](docs/MODERNIZATION.md#optional-assessment-configuration) and replace the assessment command with:
 
@@ -32,6 +46,24 @@ modernize assess --assess-config .\modernize.yaml --format markdown --delegate l
 ```
 
 The file is optional and must exist in the selected application folder for this example. `--delegate local` runs the agent on your machine; AI analysis still uses Copilot services and can consume requests.
+
+### Optional Java YAML for Modernize CLI
+
+The repository includes [java/modernize.yaml](java/modernize.yaml), a minimal, optional assessment configuration:
+
+```yaml
+analysisCoverage: full
+```
+
+`analysisCoverage: full` requests issue analysis plus codebase insights, including architecture, API contracts, configuration, workflows, dependencies, and data model. Java-specific assessment domains and target-runtime settings remain at the CLI's defaults.
+
+From the `java` folder, use it **instead of** the default assessment command:
+
+```powershell
+modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+```
+
+This file does not select the installed JDK, change the Java 11 application target, or authorize an upgrade. Codespaces defaults to JDK 27; assess its suitability explicitly in the planning goal and approve the plan before execution. See [Java YAML details and repository-root usage](docs/MODERNIZATION.md#optional-java-yaml-for-modernize-cli).
 
 ### 2. Create and approve the plan
 
@@ -116,9 +148,10 @@ Two independent blogs with equivalent publishing, authentication, and comment-mo
 | Purpose | Reference |
 | --- | --- |
 | Follow the full modernization exercise | [Modernization guide](docs/MODERNIZATION.md) |
+| Modernize one application with the CLI | [.NET modernization](docs/DOTNET-MODERNIZATION.md) or [Java modernization](docs/JAVA-MODERNIZATION.md) |
 | Present the CLI workflow | [14-slide HTML presentation](docs/presentation.html), viewable offline with PDF printing |
 | Understand YAML fields and CLI options | [Assessment configuration](docs/MODERNIZATION.md#optional-assessment-configuration) |
-| Prepare and verify the original baseline | [.NET setup](dotnet/README.md) or [Java setup](java/README.md), used only as validation support |
+| Optionally prepare the original baseline | [.NET setup](dotnet/README.md) or [Java setup](java/README.md), linked as step 1 of each modernization workflow |
 | Check behavior and restart persistence | [Required regression checks](docs/MODERNIZATION.md#required-regression-checks) |
 | Review what has actually been tested | [Verification status](docs/MODERNIZATION.md#verification-status); paid assessments and hosted CI remain unverified |
 | Practice isolated source-only security review | [Training boundaries](docs/MODERNIZATION.md#intentional-security-exercises-source-only); do not wire the fixtures into the apps |

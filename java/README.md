@@ -2,6 +2,8 @@
 
 A traditional Maven WAR: Spring MVC 5.3.39, Spring Security 5.8.16, Hibernate 5.6.15.Final, Bean Validation 6.2.5.Final, H2 2.2.224, JSP/JSTL, and XML configuration. No Spring Boot, Jakarta EE 9+, or Java features newer than 11.
 
+> **Optional baseline setup.** To modernize this application, start with the [Java modernization workflow](../docs/JAVA-MODERNIZATION.md). Use this setup guide only when preparing or validating the original application.
+
 ## Prerequisites
 
 - JDK **11**, Maven 3.6.3+, and **Tomcat 9** (Servlet 4 / `javax.servlet`).
@@ -97,6 +99,6 @@ The runner creates and removes only its own container, database volume, and test
 
 ## Source-only security exercises
 
-The [vulnerable Java examples](security-examples/VulnerableExamples.java) deliberately demonstrate SQL concatenation, raw HTML output, and unsalted MD5 password hashing. They are outside `src/main/java`, have no Spring annotations or application entry point, and are excluded from the WAR. They are for code-review/assessment training with synthetic data only, not a runnable application feature. See the [training boundaries](../README.md#intentional-security-exercises-source-only) before using them.
+The [vulnerable Java examples](security-examples/VulnerableExamples.java) deliberately demonstrate SQL concatenation, raw HTML output, and unsalted MD5 password hashing. They are outside `src/main/java`, have no Spring annotations or application entry point, and are excluded from the WAR. They are for code-review/assessment training with synthetic data only, not a runnable application feature. See the [training boundaries](../docs/MODERNIZATION.md#intentional-security-exercises-source-only) before using them.
 
 The chosen Spring/Hibernate lines are intentionally legacy and have maintenance/security limitations. This is a modernization sample, not a production support or security certification.

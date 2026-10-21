@@ -2,6 +2,8 @@
 
 Classic ASP.NET MVC 5 (5.2.9), Razor/WebPages 3.2.9, EF 6.4.4, ASP.NET Identity 2.2.4, and OWIN 4.2.2. Uses a non-SDK C# project, `packages.config`, XML configuration, synchronous repositories/services, and server-rendered views.
 
+> **Optional baseline setup.** To modernize this application, start with the [.NET modernization workflow](../docs/DOTNET-MODERNIZATION.md). Use this setup guide only when preparing or validating the original application.
+
 ## Prerequisites
 
 - Windows with the .NET Framework 4.7.2 targeting/developer pack and Framework 4.7.2 or a compatible in-place newer Framework runtime.
@@ -81,7 +83,7 @@ For a clean checkout with missing NuGet packages, append `-Restore`. The runner 
 
 ## Source-only security exercises
 
-The [vulnerable C# examples](security-examples/VulnerableExamples.cs) deliberately demonstrate SQL concatenation, raw HTML output, and unsalted MD5 password hashing. They sit outside the web project, are not included by its compile globs, and have no controller or startup registration. The baseline runner verifies their training namespace is absent from the built assembly. They are for review/assessment training with synthetic data only. See the [training boundaries](../README.md#intentional-security-exercises-source-only).
+The [vulnerable C# examples](security-examples/VulnerableExamples.cs) deliberately demonstrate SQL concatenation, raw HTML output, and unsalted MD5 password hashing. They sit outside the web project, are not included by its compile globs, and have no controller or startup registration. The baseline runner verifies their training namespace is absent from the built assembly. They are for review/assessment training with synthetic data only. See the [training boundaries](../docs/MODERNIZATION.md#intentional-security-exercises-source-only).
 
 ## Troubleshooting and limitations
 

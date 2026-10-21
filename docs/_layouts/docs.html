@@ -18,55 +18,55 @@
   <style>
     :root {
       color-scheme: light;
-      --cp-bg: #f7f4ef;
-      --cp-bg-elevated: #fcfbf8;
+      --cp-bg: #f4f7fc;
+      --cp-bg-elevated: #edf3fb;
       --cp-surface: #ffffff;
-      --cp-surface-soft: #f5f5f5;
-      --cp-border: #dedede;
-      --cp-border-strong: #919191;
-      --cp-text: #242424;
-      --cp-text-muted: #5c5c5c;
-      --cp-text-soft: #6f6f6f;
-      --cp-accent: #b11f4b;
-      --cp-accent-hover: #9a1a41;
-      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-surface-soft: #e8f0fb;
+      --cp-border: #d6e1ef;
+      --cp-border-strong: #8194ae;
+      --cp-text: #172b46;
+      --cp-text-muted: #455b77;
+      --cp-text-soft: #52637a;
+      --cp-accent: #135fb5;
+      --cp-accent-hover: #0c4c94;
+      --cp-accent-soft: rgba(19, 95, 181, 0.08);
       --cp-accent-fg: #ffffff;
       --cp-success: #16a34a;
       --cp-danger: #dc2626;
       --cp-warning: #f59e0b;
-      --cp-link: #0078d4;
+      --cp-link: #135fb5;
       --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
       --cp-overlay: rgba(255, 255, 255, 0.8);
       --cp-panel: rgba(255, 255, 255, 0.86);
       --cp-panel-strong: rgba(255, 255, 255, 0.96);
       --cp-sheen: rgba(255, 255, 255, 0.55);
-      --cp-highlight: rgba(177, 31, 75, 0.12);
+      --cp-highlight: rgba(19, 95, 181, 0.12);
     }
     html[data-theme="dark"] {
       color-scheme: dark;
-      --cp-bg: #3d3b3a;
-      --cp-bg-elevated: #343231;
-      --cp-surface: #292929;
-      --cp-surface-soft: #2e2e2e;
-      --cp-border: #474747;
-      --cp-border-strong: #5f5f5f;
-      --cp-text: #dedede;
-      --cp-text-muted: #919191;
-      --cp-text-soft: #b0b0b0;
-      --cp-accent: #fd8ea1;
-      --cp-accent-hover: #fb7b91;
-      --cp-accent-soft: rgba(253, 142, 161, 0.14);
-      --cp-accent-fg: #1a1a1a;
+      --cp-bg: #0b1422;
+      --cp-bg-elevated: #101f33;
+      --cp-surface: #14243a;
+      --cp-surface-soft: #192c45;
+      --cp-border: #2a405e;
+      --cp-border-strong: #657f9f;
+      --cp-text: #e6eef9;
+      --cp-text-muted: #b6c8df;
+      --cp-text-soft: #adc0da;
+      --cp-accent: #83baff;
+      --cp-accent-hover: #add3ff;
+      --cp-accent-soft: rgba(131, 186, 255, 0.14);
+      --cp-accent-fg: #0b1422;
       --cp-success: #4ade80;
       --cp-danger: #f87171;
       --cp-warning: #fbbf24;
-      --cp-link: #4da6ff;
+      --cp-link: #83baff;
       --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
-      --cp-overlay: rgba(41, 41, 41, 0.88);
-      --cp-panel: rgba(41, 41, 41, 0.72);
-      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-overlay: rgba(11, 20, 34, 0.88);
+      --cp-panel: rgba(20, 36, 58, 0.72);
+      --cp-panel-strong: rgba(20, 36, 58, 0.96);
       --cp-sheen: rgba(255, 255, 255, 0.04);
-      --cp-highlight: rgba(253, 142, 161, 0.12);
+      --cp-highlight: rgba(131, 186, 255, 0.12);
     }
   </style>
   <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
@@ -82,8 +82,8 @@
       </a>
       <nav class="primary-nav" aria-label="Primary navigation">
         <a href="{{ '/' | relative_url }}"{% if page.page_key == 'home' %} aria-current="page"{% endif %}>Field guide</a>
-        <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% endif %}>.NET setup</a>
-        <a href="{{ '/java/' | relative_url }}"{% if page.page_key == 'java' %} aria-current="page"{% endif %}>Java setup</a>
+        <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% elsif page.page_key == 'dotnet-setup' %} aria-current="location"{% endif %}>.NET modernization</a>
+        <a href="{{ '/java/' | relative_url }}"{% if page.page_key == 'java' %} aria-current="page"{% elsif page.page_key == 'java-setup' %} aria-current="location"{% endif %}>Java modernization</a>
         <a href="{{ '/presentation/' | relative_url }}">Presentation <span aria-hidden="true">&nearr;</span></a>
         <a href="{{ site.repository_url | append: '/tree/main' | escape }}" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository, main branch (opens in a new tab)">GitHub <span aria-hidden="true">&nearr;</span></a>
       </nav>
@@ -101,7 +101,7 @@
         {% endif %}
         <p class="hero-description">{{ page.description | escape }}</p>
         <div class="hero-actions">
-          <a class="button primary" href="{% if page.page_key == 'home' %}#modernization-workflow{% else %}#document{% endif %}">{% if page.page_key == 'home' %}Start the workflow{% else %}Open the setup guide{% endif %} <span aria-hidden="true">&rarr;</span></a>
+          <a class="button primary" href="{% if page.section == 'Optional baseline setup' %}#document{% else %}#modernization-workflow{% endif %}">{{ page.action_label | escape }} <span aria-hidden="true">&rarr;</span></a>
           <a class="button secondary" href="{{ '/presentation/' | relative_url }}">View presentation <span aria-hidden="true">&nearr;</span></a>
         </div>
         <p class="hero-caption">A practice workspace. A reviewable process. Not a completed migration.</p>
