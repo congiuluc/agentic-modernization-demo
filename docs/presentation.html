@@ -326,42 +326,50 @@ gh auth login</code></pre>
             <button type="button" data-app-button="dotnet" aria-pressed="true">.NET example</button>
             <button type="button" data-app-button="java" aria-pressed="false">Java example</button>
           </div>
-          <div class="app-example" data-app="dotnet"><h3>.NET application</h3><pre><code>cd dotnet
-modernize</code></pre><p>Choose <strong>Assess &rarr; Current folder &rarr; Assess locally</strong>.</p></div>
-          <div class="app-example" data-app="java"><h3>Java application</h3><pre><code>cd java
-modernize</code></pre><p>Choose <strong>Assess &rarr; Current folder &rarr; Assess locally</strong>.</p></div>
-          <p class="small">Start either example from the repository root. Verify the agent targets only the selected application.</p>
+          <div class="app-example" data-app="dotnet"><h3>.NET application &middot; Windows</h3><pre><code>Set-Location dotnet
+modernize assess --format markdown --delegate local</code></pre><p>The current folder is the source. No menu navigation is needed.</p></div>
+          <div class="app-example" data-app="java"><h3>Java application &middot; Any supported OS</h3><pre><code>Set-Location java
+modernize assess --format markdown --delegate local</code></pre><p>The current folder is the source. No menu navigation is needed.</p></div>
+          <p class="small">Start one example from the repository root in PowerShell 7. Keep that terminal and application folder for the next three slides.</p>
         </div>
       </div>
-      <p class="note"><code>Assess locally</code> means execution on your machine, not offline processing. AI analysis can use GitHub services and consume Copilot requests.</p>
+      <p class="note"><code>--delegate local</code> means execution on your machine, not offline processing. AI analysis can use GitHub services and consume Copilot requests.</p>
     </section>
 
-    <section class="slide" id="slide-7" data-title="Assessment findings and outputs" tabindex="-1" aria-labelledby="title-7">
+    <section class="slide" id="slide-7" data-title="Assessment configuration and outputs" tabindex="-1" aria-labelledby="title-7">
       <p class="eyebrow">06 / Assess</p>
       <h2 id="title-7">Map the risks before changing the code.</h2>
       <div class="grid">
-        <div class="card"><h3>Look for</h3><ul><li>Runtime and framework upgrade opportunities.</li><li>Deprecated APIs and incompatible dependencies.</li><li>Cloud compatibility issues, if in scope.</li><li>Codebase insights when full analysis is selected.</li></ul><p class="small">Available assessment domains and language coverage vary; review the installed CLI's options.</p></div>
-        <div class="card"><h3>Keep the output reviewable</h3><pre><code>.github/modernize/assessment/</code></pre><p>Review reports, assumptions, missing tooling, and unverified behavior.</p><p class="small">Generated state is ignored by Git in this repository. Preserve approved decisions in maintained documentation.</p></div>
+        <div class="card"><h3>Optional .NET YAML</h3><pre><code>analysisCoverage: full
+dotnet:
+  assessmentDomains: [cloud-readiness, framework-upgrade]
+  targetRuntime: net10.0</code></pre><p class="small"><code>full</code>: issues + codebase insights. Domains: selected scans. Runtime: comparison target, not upgrade approval. For Java, the shared <code>analysisCoverage: full</code> setting can be used alone.</p></div>
+        <div class="card"><h3>Use the file explicitly</h3><pre><code>modernize assess --assess-config .\modernize.yaml --format markdown --delegate local</code></pre><p class="small">An alternative to the default assessment command, not an extra required run. No YAML is required. Cloud readiness assesses Azure fit; it does not deploy.</p><p class="small">Reports: <code>.github/modernize/assessment/</code>. The guide explains fields, Java options, CLI flags, and CI configuration.</p></div>
       </div>
-      <pre><code>modernize assess --source java --output-path reports --format markdown --delegate local --no-tty</code></pre>
-      <p class="small">Headless example from the repository root; one command on Windows, Linux, or macOS. Custom output directories need their own ignore/retention policy.</p>
+      <pre><code>Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+$assessmentReport = Read-Host "Paste the full path of the assessment report file"</code></pre>
+      <p class="small">In the same PowerShell 7 terminal, paste the full path of the report you reviewed from this run, not the output directory or an older report. The next command passes this file into planning.</p>
     </section>
 
     <section class="slide" id="slide-8" data-title="Turn an assessment into an approved plan" tabindex="-1" aria-labelledby="title-8">
       <p class="eyebrow">07 / Plan</p>
       <h2 id="title-8">A target version is not a migration plan.</h2>
-      <p class="lead">Choose <strong>Create modernization plan &rarr; Keep the plan local</strong>. Replace the default Azure migration goal with the actual scope.</p>
+      <p class="lead">Choose one goal below, then run <code>modernize plan create</code> with the assessment report. Planning is separate from execution.</p>
       <div class="grid">
-        <div class="card"><h3>.NET: decide the migration boundary</h3><p>Compare an in-place Framework upgrade with a supported .NET LTS / ASP.NET Core migration.</p><ul><li>System.Web and OWIN replacements.</li><li>Project format, Razor, and configuration changes.</li><li>EF/database and Identity hash compatibility.</li></ul></div>
-        <div class="card"><h3>Java: choose a compatible stack</h3><p>Align the JDK, Spring, Security, Hibernate, Servlet/JSP APIs, H2, and container.</p><ul><li>Resolve javax versus jakarta consistently.</li><li>Preserve WAR packaging unless explicitly changed.</li><li>Do not silently introduce Spring Boot.</li></ul></div>
+        <div class="card"><h3>.NET: decide the migration boundary</h3><pre><code>$planName = "dotnet-blog-upgrade"
+$goal = "Plan only LegacyBlog.sln: compare a Framework upgrade with supported .NET LTS / ASP.NET Core MVC. Preserve routes, data and logins. No Azure or deployment. Stop after planning for approval."</code></pre></div>
+        <div class="card"><h3>Java: choose a compatible stack</h3><pre><code>$planName = "java-blog-upgrade"
+$goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, H2 and Servlet/JSP container. Preserve WAR, routes, data and logins. No Spring Boot, Azure or deployment. Stop after planning for approval."</code></pre></div>
       </div>
-      <p class="note">Inspect <code>.github/modernize/{plan-name}/plan.md</code>. Approve targets, task order, data strategy, rollback, and measurable gates before executing.</p>
+      <pre><code>modernize plan create $goal --plan-name $planName --assess-file-path $assessmentReport --delegate local</code></pre>
+      <p class="note">Stop and inspect <code>.github/modernize/{plan-name}/plan.md</code> and <code>tasks.json</code>. Approve targets, task order, data strategy, rollback, and measurable gates before executing.</p>
     </section>
 
     <section class="slide" id="slide-9" data-title="Execute and prove behavior" tabindex="-1" aria-labelledby="title-9">
       <p class="eyebrow">08 / Execute and validate</p>
       <h2 id="title-9">The strongest output is evidence.</h2>
-      <p class="lead">Execute the approved plan, inspect all branch changes, then prove routes, forms, permissions, publication dates, and persistent data still work.</p>
+      <p class="lead">After approval, execute in the same terminal and application folder. Inspect all branch changes, then return to the repository root and rerun regression checks.</p>
+      <pre><code>modernize plan execute --plan-name $planName --delegate local</code></pre>
       <div class="grid three">
         <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and IIS Express / LocalDB restart persistence.</p></div>
         <div class="card"><span class="metric">67</span><h3>Java assertions</h3><p>Actual Java 11 / Tomcat 9, JSP rendering, correct 405 responses, and container-replacement persistence.</p></div>
@@ -409,7 +417,7 @@ modernize</code></pre><p>Choose <strong>Assess &rarr; Current folder &rarr; Asse
       <p class="eyebrow">12 / Demo sequence</p>
       <h2 id="title-13">Show the process, not just the prompt.</h2>
       <div class="grid">
-        <div class="card"><ol class="steps"><li>Open the repo and explain the two application boundaries.</li><li>Run a disposable baseline and show the restart checks.</li><li>Start <code>modernize</code> in one application folder.</li><li>Assess locally and inspect the generated findings.</li><li>Generate a plan; review compatibility and data decisions.</li><li>After approval, execute, compare the branch, and rerun regressions.</li></ol></div>
+        <div class="card"><ol class="steps"><li>Choose one application; build and test a disposable baseline.</li><li>Enter its folder in PowerShell 7 and run <code>modernize assess --format markdown --delegate local</code>.</li><li>Review the report and capture its full file path.</li><li>Run <code>modernize plan create</code> with the goal, report, and plan name from the workflow slides.</li><li>Review compatibility, data, rollback, and tests; stop for approval.</li><li>Run <code>modernize plan execute</code> with that plan name, then compare the branch and rerun regressions.</li></ol></div>
         <div class="card featured"><h3>A useful planning constraint</h3><pre><code>Modernize only the selected application.
 Preserve existing routes and behavior.
 Keep data and original logins intact.
