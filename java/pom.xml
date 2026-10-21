@@ -9,8 +9,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
-    <spring.version>5.3.39</spring.version>
-    <security.version>5.8.16</security.version>
+    <spring.version>7.0.9</spring.version>
+    <security.version>6.5.11</security.version>
   </properties>
   <dependencies>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-webmvc</artifactId><version>${spring.version}</version></dependency>
