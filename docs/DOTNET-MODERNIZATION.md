@@ -24,10 +24,23 @@ From the repository root in PowerShell 7:
 modernize --version
 gh auth status
 Set-Location dotnet
-modernize assess --format markdown --delegate local
 ```
 
-Keep this terminal in the `dotnet` folder through execution. Review reports under `.github/modernize/assessment/`. To customize coverage or the .NET 10 comparison target, use the [optional assessment YAML](MODERNIZATION.md#optional-assessment-configuration) instead of the default assessment command.
+Then run **one** of the following assessments.
+
+**Simple** (default issue analysis):
+
+```powershell
+modernize assess --source . --model auto
+```
+
+**Full analysis** (uses the included [.NET YAML](../dotnet/modernize.yaml): full coverage with codebase insights, cloud-readiness and framework-upgrade domains, `net10.0` comparison target):
+
+```powershell
+modernize assess --source . --assess-config .\modernize.yaml --model auto
+```
+
+Keep this terminal in the `dotnet` folder through execution. Review reports under `.github/modernize/assessment/`. See the [assessment configuration](MODERNIZATION.md#optional-assessment-configuration) for field details. The YAML does not retarget the project or approve an upgrade.
 
 On Linux/Codespaces, findings that require unavailable Framework tooling remain unverified. Use Windows for the legacy build and runtime baseline.
 
@@ -52,7 +65,7 @@ Keep execution local. Do not add Azure services or deploy.
 Stop after planning for my approval; do not change application code
 or install tools before approval.
 '@
-modernize plan create $goal --plan-name dotnet-blog-upgrade --language dotnet --assess-file-path $assessmentReport --delegate local
+modernize plan create $goal --plan-name dotnet-blog-upgrade --language dotnet --assess-file-path $assessmentReport --model auto
 ```
 
 **Stop for approval.** Review `.github/modernize/dotnet-blog-upgrade/plan.md` and `tasks.json`, including the [.NET compatibility checklist](MODERNIZATION.md#net-planning-goal). Approve the target, data strategy, hosting changes, rollback, and validation commands before executing.
@@ -62,7 +75,7 @@ modernize plan create $goal --plan-name dotnet-blog-upgrade --language dotnet --
 From the same `dotnet` folder, after approval:
 
 ```powershell
-modernize plan execute --plan-name dotnet-blog-upgrade --delegate local
+modernize plan execute --plan-name dotnet-blog-upgrade --model auto
 ```
 
 Execution can modify code, dependencies, and commits. Inspect the complete branch history, not just uncommitted changes. Do not substitute `modernize upgrade`, which combines planning and execution.

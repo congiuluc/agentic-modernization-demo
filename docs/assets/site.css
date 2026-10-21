@@ -20,8 +20,8 @@ button[hidden] { display: none; }
 .primary-nav a:hover, .primary-nav a[aria-current="page"], .primary-nav a[aria-current="location"] { color: var(--cp-accent); background: var(--cp-accent-soft); }
 .theme-button, .copy-button { border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 0.5rem 0.75rem; color: var(--cp-text); background: var(--cp-surface); font-size: 0.8rem; white-space: nowrap; }
 .theme-button:hover, .copy-button:hover { border-color: var(--cp-accent); color: var(--cp-accent); }
-.theme-button { align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; }
-.theme-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; pointer-events: none; }
+.theme-button { align-items: center; justify-content: center; gap: 0.375rem; }
+.theme-icon { width: 1rem; height: 1rem; flex-shrink: 0; pointer-events: none; }
 .theme-icon-sun { display: none; }
 html[data-theme="dark"] .theme-icon-sun { display: block; }
 html[data-theme="dark"] .theme-icon-moon { display: none; }

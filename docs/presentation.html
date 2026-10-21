@@ -90,8 +90,8 @@
     .brand-secondary { display: block; color: var(--cp-text-soft); font-size: 0.75rem; font-weight: 500; letter-spacing: 0; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .toolbar button, .toolbar a { padding: 0.375rem 0.75rem; font-size: 0.8rem; }
-    .toolbar .theme-button { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; }
-    .theme-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; pointer-events: none; }
+    .toolbar .theme-button { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; }
+    .theme-icon { width: 1rem; height: 1rem; flex-shrink: 0; pointer-events: none; }
     .theme-icon-sun { display: none; }
     html[data-theme="dark"] .theme-icon-sun { display: block; }
     html[data-theme="dark"] .theme-icon-moon { display: none; }
@@ -254,6 +254,7 @@
       <button class="theme-button" id="theme-button" type="button" aria-label="Switch color theme" title="Switch color theme">
         <svg class="theme-icon theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
         <svg class="theme-icon theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg>
+        <span class="theme-label">Theme</span>
       </button>
       <button id="fullscreen-button" type="button">Fullscreen</button>
       <button id="print-button" type="button">Print / PDF</button>
@@ -348,24 +349,30 @@ gh auth login</code></pre>
             <button type="button" data-app-button="java" aria-pressed="false">Java example</button>
           </div>
           <div class="app-example" data-app="dotnet"><h3>.NET application &middot; Windows</h3><pre><code>Set-Location dotnet
-modernize assess --format markdown --delegate local</code></pre><p>The current folder is the source. No menu navigation is needed.</p></div>
+# Simple
+modernize assess --source . --model auto
+# Full analysis
+modernize assess --source . --assess-config .\modernize.yaml --model auto</code></pre><p>Run one. <code>--source .</code> uses the current folder; full analysis uses the included <code>modernize.yaml</code>.</p></div>
           <div class="app-example" data-app="java"><h3>Java application &middot; Any supported OS</h3><pre><code>Set-Location java
-modernize assess --format markdown --delegate local</code></pre><p>The current folder is the source. No menu navigation is needed.</p></div>
+# Simple
+modernize assess --source . --model auto
+# Full analysis
+modernize assess --source . --assess-config .\modernize.yaml --model auto</code></pre><p>Run one. <code>--source .</code> uses the current folder; full analysis uses the included <code>modernize.yaml</code>.</p></div>
           <p class="small">Start one example from the repository root in PowerShell 7. Keep that terminal and application folder for the next three slides.</p>
         </div>
       </div>
-      <p class="note"><code>--delegate local</code> means execution on your machine, not offline processing. AI analysis can use GitHub services and consume Copilot requests.</p>
+      <p class="note">Without <code>--delegate</code>, the agent runs on your machine, not offline. <code>--model auto</code> picks an available model. AI analysis can use GitHub services and consume Copilot requests.</p>
     </section>
 
     <section class="slide" id="slide-7" data-title="Assessment configuration and outputs" tabindex="-1" aria-labelledby="title-7">
       <p class="eyebrow">06 / Assess</p>
       <h2 id="title-7">Map the risks before changing the code.</h2>
       <div class="grid">
-        <div class="card"><h3>Optional .NET YAML</h3><pre><code>analysisCoverage: full
+        <div class="card"><h3>Included .NET YAML</h3><pre><code>analysisCoverage: full
 dotnet:
   assessmentDomains: [cloud-readiness, framework-upgrade]
-  targetRuntime: net10.0</code></pre><p class="small"><code>full</code>: issues + codebase insights. Domains: selected scans. Runtime: comparison target, not upgrade approval. Java's optional <code>java/modernize.yaml</code> contains only <code>analysisCoverage: full</code>.</p></div>
-        <div class="card"><h3>Use the file explicitly</h3><pre><code>modernize assess --assess-config .\modernize.yaml --format markdown --delegate local</code></pre><p class="small">An alternative to the default assessment command, not an extra required run. No YAML is required. Cloud readiness assesses Azure fit; it does not deploy.</p><p class="small">Reports: <code>.github/modernize/assessment/</code>. The guide explains fields, Java options, CLI flags, and CI configuration.</p></div>
+  targetRuntime: net10.0</code></pre><p class="small"><code>full</code>: issues + codebase insights. Domains: selected scans. Runtime: comparison target, not upgrade approval. Java's <code>java/modernize.yaml</code> contains only <code>analysisCoverage: full</code>.</p></div>
+        <div class="card"><h3>Full analysis command</h3><pre><code>modernize assess --source . --assess-config .\modernize.yaml --model auto</code></pre><p class="small">An alternative to the simple command, not an extra required run. Cloud readiness assesses Azure fit; it does not deploy.</p><p class="small">Reports: <code>.github/modernize/assessment/</code>. The guide explains fields, Java options, CLI flags, and CI configuration.</p></div>
       </div>
       <pre><code>Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
 $assessmentReport = Read-Host "Paste the full path of the assessment report file"</code></pre>
@@ -382,7 +389,7 @@ $goal = "Plan only LegacyBlog.sln: compare a Framework upgrade with supported .N
         <div class="card"><h3>Java: choose a compatible stack</h3><pre><code>$planName = "java-blog-upgrade"
 $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, H2 and Servlet/JSP container. Preserve WAR, routes, data and logins. No Spring Boot, Azure or deployment. Stop after planning for approval."</code></pre></div>
       </div>
-      <pre><code>modernize plan create $goal --plan-name $planName --assess-file-path $assessmentReport --delegate local</code></pre>
+      <pre><code>modernize plan create $goal --plan-name $planName --assess-file-path $assessmentReport --model auto</code></pre>
       <p class="note">Stop and inspect <code>.github/modernize/{plan-name}/plan.md</code> and <code>tasks.json</code>. Approve targets, task order, data strategy, rollback, and measurable gates before executing.</p>
     </section>
 
@@ -390,7 +397,7 @@ $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, 
       <p class="eyebrow">08 / Execute and validate</p>
       <h2 id="title-9">The strongest output is evidence.</h2>
       <p class="lead">After approval, execute in the same terminal and application folder. Inspect all branch changes, then return to the repository root and rerun regression checks.</p>
-      <pre><code>modernize plan execute --plan-name $planName --delegate local</code></pre>
+      <pre><code>modernize plan execute --plan-name $planName --model auto</code></pre>
       <div class="grid three">
         <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and IIS Express / LocalDB restart persistence.</p></div>
         <div class="card"><span class="metric">67</span><h3>Java assertions</h3><p>Actual Java 11 / Tomcat 9, JSP rendering, correct 405 responses, and container-replacement persistence.</p></div>
@@ -438,7 +445,7 @@ $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, 
       <p class="eyebrow">12 / Demo sequence</p>
       <h2 id="title-13">Show the process, not just the prompt.</h2>
       <div class="grid">
-        <div class="card"><ol class="steps"><li>Choose one application; build and test a disposable baseline.</li><li>Enter its folder in PowerShell 7 and run <code>modernize assess --format markdown --delegate local</code>.</li><li>Review the report and capture its full file path.</li><li>Run <code>modernize plan create</code> with the goal, report, and plan name from the workflow slides.</li><li>Review compatibility, data, rollback, and tests; stop for approval.</li><li>Run <code>modernize plan execute</code> with that plan name, then compare the branch and rerun regressions.</li></ol></div>
+        <div class="card"><ol class="steps"><li>Choose one application; build and test a disposable baseline.</li><li>Enter its folder in PowerShell 7 and run <code>modernize assess --source . --model auto</code>.</li><li>Review the report and capture its full file path.</li><li>Run <code>modernize plan create</code> with the goal, report, and plan name from the workflow slides.</li><li>Review compatibility, data, rollback, and tests; stop for approval.</li><li>Run <code>modernize plan execute</code> with that plan name, then compare the branch and rerun regressions.</li></ol></div>
         <div class="card featured"><h3>A useful planning constraint</h3><pre><code>Modernize only the selected application.
 Preserve existing routes and behavior.
 Keep data and original logins intact.
@@ -564,6 +571,7 @@ Stop after planning for my approval.</code></pre><p>Then show the optional CI as
         const label = `Switch to ${nextTheme} theme`;
         themeButton.setAttribute("aria-label", label);
         themeButton.title = label;
+        themeButton.querySelector(".theme-label").textContent = nextTheme === "dark" ? "Dark" : "Light";
         if (location.protocol !== "file:") {
           const guide = new URL("../", location.href);
           guide.searchParams.set("scoutTheme", document.documentElement.dataset.theme);

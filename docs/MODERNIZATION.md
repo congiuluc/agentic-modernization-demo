@@ -75,7 +75,7 @@ Check the installed tools with `modernize --version`, `dotnet --list-sdks`, `jav
 
 **Authentication:** run `gh auth status` to check repository access. Codespaces normally supplies a repository-scoped `GITHUB_TOKEN`; that token is **not** a Copilot-enabled credential. For this workflow, add an organization-approved fine-grained PAT owned by a Copilot-enabled account as a **Codespaces secret named `COPILOT_GITHUB_TOKEN`**, with the **Copilot Requests** account permission and any necessary repository/organization authorization. Grant the secret access only to this repository and create or restart the Codespace so it is available. Do not echo the token or commit it. See the current [Copilot authentication documentation](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/authenticate-copilot-cli) and your organization's policies.
 
-The setup does not authenticate, call AI services, assess source, execute plans, create commits, provision Azure resources, or start either application. Continue at [Establish a baseline](#2-establish-a-baseline), then run the explicit assessment and planning commands. The `local` delegate means execution **inside the Codespace**; it does not mean offline processing or a separate Copilot cloud-agent job.
+The setup does not authenticate, call AI services, assess source, execute plans, create commits, provision Azure resources, or start either application. Continue at [Establish a baseline](#2-establish-a-baseline), then run the explicit assessment and planning commands. Without `--delegate`, commands run **inside the Codespace**; this does not mean offline processing or a separate Copilot cloud-agent job.
 
 For the original **Java baseline**, run this from the repository root only when you choose to record regression evidence:
 
@@ -95,7 +95,7 @@ No application ports are automatically forwarded. Keep any manually forwarded te
 
 1. **Assess:** run `modernize assess`, then read the generated report.
 2. **Plan:** run `modernize plan create "<goal>" --assess-file-path "<report-file>" --plan-name blog-upgrade`, then review and approve the generated plan.
-3. **Execute:** run `modernize plan execute --plan-name blog-upgrade --delegate local`, then rerun regression and restart/persistence checks.
+3. **Execute:** run `modernize plan execute --plan-name blog-upgrade --model auto`, then rerun regression and restart/persistence checks.
 
 The steps below provide copy-and-paste commands with application-specific goals and the assessment report as planning input. Run execution separately, only after approval; do not replace these stages with `modernize upgrade`, which combines planning and execution.
 
@@ -146,21 +146,33 @@ From the repository root, choose **one** application. Copy only the matching blo
 
 ```powershell
 Set-Location dotnet
-modernize assess --format markdown --delegate local
+
+# Simple: default issue analysis
+modernize assess --source . --model auto
+
+# Full analysis: codebase insights, cloud-readiness and framework-upgrade domains, net10.0 target
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
 **Java (Windows, Linux, or macOS):**
 
 ```powershell
 Set-Location java
-modernize assess --format markdown --delegate local
+
+# Simple: default issue analysis
+modernize assess --source . --model auto
+
+# Full analysis: issue analysis plus codebase insights
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
-The current application folder is the assessment source. Results are saved under `.github/modernize/assessment/` in that folder. Review the report before planning; findings are not evidence that an upgrade has succeeded.
+Run **one** of the two commands, not both. The full-analysis commands use the `modernize.yaml` already included in each application folder.
 
-To customize the assessment, use the [optional YAML configuration](#optional-assessment-configuration) below **instead of** the default assessment command. Review its domains, analysis coverage, and target runtime first; a configured target is not approval to execute an upgrade.
+`--source .` selects the current application folder as the assessment source (required by current CLI versions). Results are saved under `.github/modernize/assessment/` in that folder. Review the report before planning; findings are not evidence that an upgrade has succeeded.
 
-`--delegate local` runs the agent on this machine, not offline: AI analysis can use GitHub Copilot services and consume Copilot requests. Do not add `--no-tty` for this walkthrough; reserve it for the [optional automated assessment](#optional-automated-assessment).
+The [assessment configuration](#optional-assessment-configuration) below explains the YAML fields. Review its domains, analysis coverage, and target runtime first; a configured target is not approval to execute an upgrade.
+
+Reports use the CLI's default HTML format. Without `--delegate`, the agent runs on this machine, not offline: AI analysis can use GitHub Copilot services and consume Copilot requests. Do not add `--no-tty` for this walkthrough; reserve it for the [optional automated assessment](#optional-automated-assessment).
 
 In the **same terminal and application folder**, list the generated files, then paste the full path of the report you reviewed when prompted. Choose the report for this application and this assessment run, not an older result or the output directory:
 
@@ -173,7 +185,7 @@ $assessmentReport = Read-Host "Paste the full path of the assessment report file
 
 **You do not need a configuration file to follow this guide.** Use one when you want repeatable assessment settings, a specific comparison target, or the same options locally and in CI. `modernize.yaml` is a convenient filename, not a required name.
 
-Save the following as `modernize.yaml` in the selected **.NET application folder**:
+The [.NET application folder](../dotnet/modernize.yaml) already includes this `modernize.yaml`:
 
 ```yaml
 analysisCoverage: full
@@ -184,10 +196,10 @@ dotnet:
   targetRuntime: net10.0
 ```
 
-From that application folder, use this command **as the alternative to the default assessment command in step 3**, not as a second assessment you must run:
+From that application folder, this is the **full analysis** command from step 3, an alternative to the simple command rather than a second assessment you must run:
 
 ```powershell
-modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
 Pass the file explicitly with `--assess-config`; do not assume the CLI loads an arbitrary `modernize.yaml` automatically. Relative paths are resolved from your terminal's current directory. If you run from the repository root instead, use `--source .\dotnet --assess-config .\dotnet\modernize.yaml`.
@@ -217,11 +229,11 @@ The official assessment documentation also describes these language-specific set
 | CLI option | Values / example | Purpose |
 | --- | --- | --- |
 | `--assess-config` | `.\modernize.yaml` | Selects the assessment YAML file and overrides the corresponding default assessment settings. |
-| `--source` | `.\dotnet` or `.\java`; current directory if omitted | Selects the application to assess. A JSON repository list can also be passed here for batch assessment; it is not an assessment YAML file. |
+| `--source` | `.\dotnet` or `.\java`; required; use `.` for the current directory | Selects the application to assess. A JSON repository list can also be passed here for batch assessment; it is not an assessment YAML file. |
 | `--output-path` | A report directory | Changes where reports are written; default is `.github/modernize/assessment/`. Use an appropriate ignore and retention policy for custom directories. |
-| `--format` | `markdown` or `html` | Selects the report format; CLI default is `html`, while this guide uses `markdown`. |
-| `--delegate` | `local` or `cloud` | Selects execution on this machine or delegation to a cloud agent. This guide uses `local`; neither value means offline AI processing. |
-| `--model` | A model ID from `modernize help models` | Overrides model selection for the assessment. Availability and request usage depend on your account. |
+| `--format` | `markdown` or `html` | Selects the report format. This guide uses the CLI default, `html`; the automated runner requests `markdown`. |
+| `--delegate` | `local` or `cloud` | Selects execution on this machine or delegation to a cloud agent. This guide omits it and runs locally; neither value means offline AI processing. |
+| `--model` | `auto` or a model ID from `modernize help models` | Overrides model selection. This guide uses `auto` so the CLI selects an available model instead of its built-in default, which may not be enabled for your account. Availability and request usage depend on your account. |
 | `--no-tty` | Switch | Disables terminal interaction for automation. Ensure all inputs are supplied before using it in CI. |
 
 For CI, pass the repository-relative YAML path through `assessment-config` in the [GitHub Actions template](../.github/workflows/modernization-assessment-template.yml), `assessmentConfig` in the [Azure DevOps template](../.azdo/templates/modernization-assessment.yml), or `-AssessmentConfig` when invoking the [shared runner](../scripts/Invoke-ModernizationAssessment.ps1). For example, use `dotnet\modernize.yaml` for .NET or `java\modernize.yaml` for Java; the runner resolves it from the repository root and passes it as an absolute `--assess-config` path.
@@ -245,13 +257,13 @@ analysisCoverage: full
 **From the Java application folder**, replace the default assessment command with:
 
 ```powershell
-modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
 **Alternatively, from the repository root**, specify both paths:
 
 ```powershell
-modernize assess --source .\java --assess-config .\java\modernize.yaml --format markdown --delegate local
+modernize assess --source .\java --assess-config .\java\modernize.yaml --model auto
 ```
 
 Run only one assessment variant. The file is optional; omit `--assess-config` to use the CLI's default/discovered assessment settings. Continue with the report-selection step above and [plan generation](#4-generate-and-approve-a-plan) after reviewing the findings.
@@ -282,7 +294,7 @@ behavior. Keep execution local; do not add Azure services or deploy.
 Stop after planning; do not change application code or install tools
 until I approve the target and plan.
 '@
-modernize plan create $goal --plan-name $planName --language dotnet --assess-file-path $assessmentReport --delegate local
+modernize plan create $goal --plan-name $planName --language dotnet --assess-file-path $assessmentReport --model auto
 ```
 
 Review these repository-specific concerns before approving a plan:
@@ -309,7 +321,7 @@ local; do not introduce Spring Boot, add Azure services, or deploy.
 Stop after planning; do not change application code or install tools
 until I approve the target and plan.
 '@
-modernize plan create $goal --plan-name $planName --language java --assess-file-path $assessmentReport --delegate local
+modernize plan create $goal --plan-name $planName --language java --assess-file-path $assessmentReport --model auto
 ```
 
 Review the generated plan before confirming execution:
@@ -326,7 +338,7 @@ Review the generated plan before confirming execution:
 **Only after reviewing and approving the plan**, run this command in the same terminal and application folder. `$planName` is the application-specific name set in step 4:
 
 ```powershell
-modernize plan execute --plan-name $planName --delegate local
+modernize plan execute --plan-name $planName --model auto
 ```
 
 If you opened a new terminal, first return to the selected application folder and set `$planName` to `dotnet-blog-upgrade` or `java-blog-upgrade`. The agent runs the ordered tasks, applies code and dependency changes, validates builds, scans for and addresses CVEs, and creates commits.

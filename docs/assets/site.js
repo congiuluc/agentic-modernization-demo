@@ -78,6 +78,7 @@
     const label = `Switch to ${next} theme`;
     themeButton.setAttribute("aria-label", label);
     themeButton.title = label;
+    themeButton.querySelector(".theme-label").textContent = next === "dark" ? "Dark" : "Light";
     document.querySelectorAll("a[href]").forEach((link) => {
       const url = new URL(link.getAttribute("href"), location.href);
       if (url.origin === location.origin && url.pathname !== location.pathname) {

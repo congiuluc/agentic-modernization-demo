@@ -32,20 +32,25 @@ From the repository root in **PowerShell 7**, authenticate, choose one applicati
 modernize --version
 gh auth status
 Set-Location java
-modernize assess --format markdown --delegate local
 ```
 
 For .NET, use `Set-Location dotnet` instead. The Framework 4.7.2 build/runtime baseline requires **Windows**. Keep the same terminal and application folder through planning and execution.
 
-If GitHub CLI is not authenticated locally, run `gh auth login`. In Codespaces, repository access is usually already configured, but the automatic token is not a Copilot credential: follow the [Codespaces authentication steps](docs/MODERNIZATION.md#using-github-codespaces).
-
-Review the findings under `.github/modernize/assessment/`. To customize coverage or targets, use the [optional YAML configuration](docs/MODERNIZATION.md#optional-assessment-configuration) and replace the assessment command with:
+Then run **one** of these assessments (both apps include a `modernize.yaml` for full analysis):
 
 ```powershell
-modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+# Simple: default issue analysis
+modernize assess --source . --model auto
+
+# Full analysis: issues plus codebase insights (and .NET domains/target from dotnet\modernize.yaml)
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
-The file is optional and must exist in the selected application folder for this example. `--delegate local` runs the agent on your machine; AI analysis still uses Copilot services and can consume requests.
+If GitHub CLI is not authenticated locally, run `gh auth login`. In Codespaces, repository access is usually already configured, but the automatic token is not a Copilot credential: follow the [Codespaces authentication steps](docs/MODERNIZATION.md#using-github-codespaces).
+
+Review the findings under `.github/modernize/assessment/`. See the [assessment configuration](docs/MODERNIZATION.md#optional-assessment-configuration) for YAML fields.
+
+Without `--delegate`, the agent runs on your machine; AI analysis still uses Copilot services and can consume requests. `--model auto` lets the CLI pick an available model.
 
 ### Optional Java YAML for Modernize CLI
 
@@ -60,7 +65,7 @@ analysisCoverage: full
 From the `java` folder, use it **instead of** the default assessment command:
 
 ```powershell
-modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
 This file does not select the installed JDK, change the Java 11 application target, or authorize an upgrade. Codespaces defaults to JDK 27; assess its suitability explicitly in the planning goal and approve the plan before execution. See [Java YAML details and repository-root usage](docs/MODERNIZATION.md#optional-java-yaml-for-modernize-cli).
@@ -112,7 +117,7 @@ or install tools before approval.
 Generate the plan using the selected prompt and assessment report:
 
 ```powershell
-modernize plan create $goal --assess-file-path $assessmentReport --plan-name blog-upgrade --delegate local
+modernize plan create $goal --assess-file-path $assessmentReport --plan-name blog-upgrade --model auto
 ```
 
 **Stop and review** `.github/modernize/blog-upgrade/plan.md` and `tasks.json`. Approve target versions, compatibility choices, ordered tasks, data/rollback strategy, and success criteria before continuing.
@@ -124,7 +129,7 @@ See the full [.NET](docs/MODERNIZATION.md#net-planning-goal) and [Java](docs/MOD
 Only after approval, from the same application folder:
 
 ```powershell
-modernize plan execute --plan-name blog-upgrade --delegate local
+modernize plan execute --plan-name blog-upgrade --model auto
 ```
 
 Execution changes code and dependencies and can create commits. Review the complete branch history, not just uncommitted files. Do not use `modernize upgrade` as a shortcut here: it combines planning and execution.

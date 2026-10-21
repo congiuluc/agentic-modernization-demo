@@ -24,18 +24,23 @@ From the repository root in PowerShell 7:
 modernize --version
 gh auth status
 Set-Location java
-modernize assess --format markdown --delegate local
 ```
 
-Keep this terminal in the `java` folder through execution. Review reports under `.github/modernize/assessment/`.
+Then run **one** of the following assessments.
 
-For repeatable full-analysis coverage, use the included [Java YAML](../java/modernize.yaml) **instead of** the default assessment command:
+**Simple** (default issue analysis):
 
 ```powershell
-modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+modernize assess --source . --model auto
 ```
 
-See [Java YAML options and limits](MODERNIZATION.md#optional-java-yaml-for-modernize-cli). This file does not select the build JDK, retarget the Java 11 WAR, or establish JDK 27 compatibility.
+**Full analysis** (uses the included [Java YAML](../java/modernize.yaml): full coverage with codebase insights):
+
+```powershell
+modernize assess --source . --assess-config .\modernize.yaml --model auto
+```
+
+Keep this terminal in the `java` folder through execution. Review reports under `.github/modernize/assessment/`. See [Java YAML options and limits](MODERNIZATION.md#optional-java-yaml-for-modernize-cli). This file does not select the build JDK, retarget the Java 11 WAR, or establish JDK 27 compatibility.
 
 ### 3. Generate and approve the plan
 
@@ -58,7 +63,7 @@ Keep execution local. Do not introduce Spring Boot, add Azure services,
 or deploy. Stop after planning for my approval; do not change
 application code or install tools before approval.
 '@
-modernize plan create $goal --plan-name java-blog-upgrade --language java --assess-file-path $assessmentReport --delegate local
+modernize plan create $goal --plan-name java-blog-upgrade --language java --assess-file-path $assessmentReport --model auto
 ```
 
 **Stop for approval.** Review `.github/modernize/java-blog-upgrade/plan.md` and `tasks.json`, including the [Java compatibility checklist](MODERNIZATION.md#java-planning-goal). Approve the JDK/framework/container combination, H2 migration strategy, rollback, and validation commands before executing.
@@ -68,7 +73,7 @@ modernize plan create $goal --plan-name java-blog-upgrade --language java --asse
 From the same `java` folder, after approval:
 
 ```powershell
-modernize plan execute --plan-name java-blog-upgrade --delegate local
+modernize plan execute --plan-name java-blog-upgrade --model auto
 ```
 
 Execution can modify code, dependencies, and commits. Inspect the complete branch history, not just uncommitted changes. Do not substitute `modernize upgrade`, which combines planning and execution.
