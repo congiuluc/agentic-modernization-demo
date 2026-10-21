@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace LegacyBlog.Controllers;
@@ -11,8 +12,10 @@ public class ErrorController(ILogger<ErrorController> logger) : Controller
     public IActionResult Failure()
     {
         var error = HttpContext.Features.Get<IExceptionHandlerPathFeature>()?.Error;
-        var sql = (error as DbUpdateException)?.GetBaseException() as SqlException;
-        var status = sql != null && sql.Number is 2601 or 2627 or 547 ? 409 :
+        var databaseError = (error as DbUpdateException)?.GetBaseException();
+        var conflict = databaseError is SqlException { Number: 2601 or 2627 or 547 }
+            || databaseError is SqliteException { SqliteExtendedErrorCode: 1555 or 2067 or 787 or 275 };
+        var status = conflict ? 409 :
             error is BadHttpRequestException bad ? bad.StatusCode : 500;
         if (status >= 500) logger.LogError(error, "Blog request failed");
         else logger.LogWarning("Blog request rejected ({Status}): {Reason}", status, error?.Message);

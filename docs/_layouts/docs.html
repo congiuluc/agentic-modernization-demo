@@ -87,7 +87,10 @@
         <a href="{{ '/presentation/' | relative_url }}">Presentation <span aria-hidden="true">&nearr;</span></a>
         <a href="{{ site.repository_url | append: '/tree/main' | escape }}" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository, main branch (opens in a new tab)">GitHub <span aria-hidden="true">&nearr;</span></a>
       </nav>
-      <button class="theme-button ui-only" id="theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
+      <button class="theme-button ui-only" id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+        <svg class="theme-icon theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+        <svg class="theme-icon theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg>
+      </button>
     </div>
   </header>
   <main id="main">
@@ -109,7 +112,7 @@
       {% if page.page_key == 'home' %}
       <div class="workspace-card" aria-label="Repository at a glance">
         <div class="workspace-heading"><span class="workspace-mark" aria-hidden="true"></span> YOUR MODERNIZATION WORKSPACE <code>01</code></div>
-        <div class="stack-card"><span class="stack-symbol">.NET</span><div><strong>Framework 4.7.2</strong><p>MVC 5 &middot; EF 6 &middot; IIS Express</p></div><span class="platform-tag">Windows</span></div>
+        <div class="stack-card"><span class="stack-symbol">.NET</span><div><strong>.NET 10 working copy</strong><p>ASP.NET Core &middot; EF Core &middot; SQLite</p></div><span class="platform-tag">Local file</span></div>
         <div class="stack-card"><span class="stack-symbol">JAVA</span><div><strong>Java 11</strong><p>Spring MVC &middot; Hibernate &middot; Tomcat</p></div><span class="platform-tag">WAR</span></div>
         <div class="workspace-flow"><span>Assess</span><span aria-hidden="true">&rarr;</span><span>Plan</span><span aria-hidden="true">&rarr;</span><strong>Execute</strong></div>
         <p class="workspace-caption">One application at a time. Human approval at every decision boundary.</p>

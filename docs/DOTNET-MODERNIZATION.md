@@ -2,13 +2,15 @@
 
 Modernize the ASP.NET MVC 5 blog with the **Modernize CLI**: assess the application, create a plan, approve it, execute the changes, and validate the result. The starting point is [LegacyBlog.sln](../dotnet/LegacyBlog.sln), targeting .NET Framework 4.7.2 with EF6, ASP.NET Identity, OWIN, and LocalDB.
 
+**Current working-copy checkpoint:** the application now targets .NET 10/ASP.NET Core and uses a seeded SQLite file by default. The original Framework stack is the historical migration starting point. Review the checked-out code before using a planning prompt; do not request a conversion that has already been completed.
+
 > **Modernization, not application startup, is the goal.** Local setup is an optional supporting step. Codespaces is also optional; its .NET 10 SDK does not provide Windows-only Framework MSBuild, IIS Express, or LocalDB.
 
 ## Modernization workflow
 
 ### 1. Optional: set up and run the original application
 
-Follow the [.NET setup guide](../dotnet/README.md) only if you need to install the legacy tools, launch the original blog, or record its baseline behavior. Skip this setup step if the environment is already ready or you are only assessing and planning.
+Follow the [.NET setup guide](../dotnet/README.md) to run the current working application with its default SQLite database and demo posts, or configure SQL Server explicitly. Skip this setup step if the environment is already ready or you are only assessing and planning. Original Framework-baseline checks require the original revision and Windows tooling.
 
 Before executing code changes, create a dedicated branch, record the baseline commit, and back up the database. Baseline and regression evidence are still required before approving the resulting changes; skipping setup does not make an unexecuted check pass.
 
@@ -39,7 +41,10 @@ $assessmentReport = Read-Host "Paste the full path of the assessment report file
 $goal = @'
 Plan modernization of only LegacyBlog.sln in the current folder.
 Compare an in-place .NET Framework upgrade with migration to .NET 10
-and ASP.NET Core MVC. Explain System.Web, OWIN, Razor, project-format,
+and ASP.NET Core MVC only for the original Framework baseline.
+If this checkout already uses .NET 10/ASP.NET Core, preserve it and plan
+remaining work instead of repeating that conversion.
+Explain System.Web, OWIN, Razor, project-format,
 EF6, LocalDB, and ASP.NET Identity password-hash compatibility.
 Preserve routes, authorization, antiforgery protection, validation,
 moderation, persistent data, and original logins.
@@ -72,6 +77,70 @@ Return to the repository root:
 Set-Location ..
 ```
 
-Follow the [post-modernization validation steps](MODERNIZATION.md#6-validate-and-review-the-results) with the approved target toolchain. Verify routes, administrator login, authorization, CSRF rejection, CRUD, moderation, and data persistence after restart.
+The agent's build/CVE checks are not proof of behavioral parity. Complete the checks below against the **approved target**, using a disposable copy of the original database.
 
-The [existing baseline checks](MODERNIZATION.md#required-regression-checks) validate the Framework application on Windows. If the plan migrates to ASP.NET Core, update the build, hosting, and CI commands accordingly rather than treating legacy CI as target-runtime evidence. Update the setup guide with the verified new commands and open a pull request for review.
+#### Build and test the approved target
+
+For an ASP.NET Core / modern .NET SDK-style target, run these commands from the repository root. Adjust the paths if the approved plan renamed the solution or test project:
+
+```powershell
+dotnet --info
+dotnet restore .\dotnet\LegacyBlog.sln
+if ($LASTEXITCODE -ne 0) { throw "Restore failed." }
+dotnet build .\dotnet\LegacyBlog.sln --configuration Release --no-restore
+if ($LASTEXITCODE -ne 0) { throw "Build failed." }
+dotnet test .\dotnet\LegacyBlog.Tests\LegacyBlog.Tests.csproj --configuration Release --no-build
+if ($LASTEXITCODE -ne 0) { throw "Tests failed." }
+```
+
+Confirm that the expected tests were discovered and executed; a run with no tests is not a passing regression suite. Tests using SQLite or another test database do not establish compatibility with the application's approved SQL Server database.
+
+For an original Framework checkout, use that revision's Windows/MSBuild setup instructions instead. The current [.NET setup guide](../dotnet/README.md#restore-and-build) describes the SDK-style .NET 10 working copy. Do not treat the .NET 10 SDK as a replacement for Framework MSBuild, IIS Express, or LocalDB.
+
+#### Start the upgraded application
+
+1. In a separate terminal, select a disposable database copy. For the default SQLite provider, set `BLOG_DOTNET_DB_PATH` to that file. For an approved SQL Server target, set `BLOG_DOTNET_CONNECTION_STRING` or `ConnectionStrings:Blog` explicitly; this selects SQL Server without fallback. Do not point migration experiments at the only copy of the original data.
+2. Preserve the original users and password hashes. A fresh database with a newly seeded administrator does not prove login/data migration compatibility.
+3. Start the approved host on loopback.
+
+For an ASP.NET Core target retaining this project path:
+
+```powershell
+dotnet run --project .\dotnet\LegacyBlog\LegacyBlog.csproj --configuration Release --no-build --no-launch-profile --urls http://127.0.0.1:5080
+```
+
+For a retained Framework target, use IIS Express on Windows according to the approved Framework-baseline instructions. LocalDB also requires Windows, even if the application is now ASP.NET Core.
+
+Review startup/migration errors and confirm the public home page responds before running smoke checks. Keep this server terminal open.
+
+#### Run HTTP and form checks
+
+In another PowerShell 7 terminal at the repository root, enter the **original administrator credentials** and the upgraded application's loopback URL:
+
+```powershell
+$env:BLOG_ADMIN_USER = Read-Host "Original administrator username"
+$secret = Read-Host "Original administrator password" -AsSecureString
+$env:BLOG_ADMIN_PASSWORD = [PSCredential]::new("local", $secret).GetNetworkCredential().Password
+$baseUrl = Read-Host "Validation base URL (for example http://localhost:5080)"
+.\scripts\Test-Blogs.ps1 -App DotNet -DotNetBaseUrl $baseUrl
+```
+
+The [HTTP smoke checks](../scripts/Test-Blogs.ps1) exercise public pages, categories/pagination, private drafts, original administrator login, CRUD, publication timestamps, moderation, CSRF rejection, and invalid/not-found responses. They create and clean up uniquely named test records; use a disposable validation database and inspect any failure. A freshly seeded SQLite file proves local-demo behavior, not migration of an existing SQL Server database.
+
+#### Prove restart and data persistence
+
+The smoke command above does **not** include a `-RestartApplication` callback, so it does not establish restart persistence by itself. Perform this separate check:
+
+1. Using the running upgraded app, create a uniquely named post, publish it, and approve a comment. Record the content, publication timestamp, and existing seed-record counts.
+2. Stop the application process completely, then restart it with the **same database and configuration**. Refreshing a browser page is not an application restart.
+3. Open a fresh browser session and sign in with the original administrator account.
+4. Verify the post, timestamp, approved comment, and edits survived; seed records must not multiply, reset, or overwrite changes.
+5. Remove only the records you created for this check. If a repeatable restart command is part of the approved hosting setup, it can instead be supplied to the smoke script's `-RestartApplication` parameter.
+
+#### Review evidence and CI before merging
+
+- Compare the complete branch against the recorded baseline commit, including agent-created commits, staged changes, and uncommitted files. Confirm that Java remains unchanged.
+- Record SDK/runtime/database versions, test counts, executed commands, HTTP and restart results, remaining risks, and anything not tested. A failed or unavailable check is not a pass.
+- If routes, forms, configuration, or hosting intentionally changed, review the compatibility decision and update the corresponding checks; do not weaken assertions merely to make them pass.
+- Update the setup guide and CI for the approved target. The [local regression runner](../scripts/Test-ApplicationBaseline.ps1) now verifies .NET 10/Kestrel with disposable SQLite; adapt it if the approved target uses a different host/database rather than treating its results as SQL Server migration evidence.
+- Reconcile dependency/CVE findings with the approved plan, then open a pull request only when the agreed acceptance criteria pass. Update the [verification status](MODERNIZATION.md#verification-status) only with executed evidence.

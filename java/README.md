@@ -69,6 +69,8 @@ No TCP H2 server or database console is enabled. Do not run multiple application
 
 `src/main/resources/db/schema.sql` defines the explicit initial schema with non-destructive `IF NOT EXISTS` statements. Hibernate validates it instead of using `create-drop` or silently updating existing tables. To change the schema later, author a deliberate migration before starting the changed application. Seed state is persisted; restarts do not recreate deleted sample content or overwrite edits/passwords.
 
+The first empty database is populated automatically with **Engineering and Journal categories, 12 published posts, 2 private drafts, and 2 comments** (one approved, one pending), plus the administrator supplied through the required environment variables. No database server, prebuilt database download, or hardcoded administrator password is needed. The database file stays local and is ignored by Git.
+
 Login passwords are BCrypt-hashed. Spring Security provides session fixation protection, CSRF tokens, and admin authorization. Spring's form-tag HTML escaping and JSP output encoding are enabled; post bodies and comments remain plain text.
 
 ## Verify

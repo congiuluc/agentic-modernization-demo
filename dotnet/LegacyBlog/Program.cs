@@ -2,14 +2,11 @@ using LegacyBlog.Data;
 using LegacyBlog.Repositories;
 using LegacyBlog.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
-var connection = builder.Configuration["BLOG_DOTNET_CONNECTION_STRING"]
-    ?? builder.Configuration.GetConnectionString("Blog")
-    ?? throw new InvalidOperationException("Configure ConnectionStrings:Blog or BLOG_DOTNET_CONNECTION_STRING with a SQL Server connection string.");
-builder.Services.AddDbContext<BlogContext>(options => options.UseSqlServer(connection));
+builder.Services.AddDbContext<BlogContext>(options =>
+    BlogDatabase.Configure(options, builder.Configuration, builder.Environment.ContentRootPath));
 builder.Services.AddScoped<BlogRepository>();
 builder.Services.AddScoped<BlogService>();
 builder.Services.AddControllersWithViews();

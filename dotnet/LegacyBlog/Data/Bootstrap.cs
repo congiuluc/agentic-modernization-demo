@@ -11,7 +11,7 @@ public static class Bootstrap
 {
     public static void Initialize(BlogContext db)
     {
-        db.Database.EnsureCreated(); // Never drops or migrates an existing SQL Server database.
+        db.Database.EnsureCreated(); // Never drops or migrates an existing database.
         using var transaction = db.Database.BeginTransaction();
         if (!db.Users.Any())
         {

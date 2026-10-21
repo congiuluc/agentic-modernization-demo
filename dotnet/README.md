@@ -1,85 +1,114 @@
-# Framework 4.7.2 blog
+# .NET blog: local setup and demo data
 
-Classic ASP.NET MVC 5 (5.2.9), Razor/WebPages 3.2.9, EF 6.4.4, ASP.NET Identity 2.2.4, and OWIN 4.2.2. Uses a non-SDK C# project, `packages.config`, XML configuration, synchronous repositories/services, and server-rendered views.
+The current working application uses **.NET 10, ASP.NET Core MVC, and EF Core**. It creates a **persistent SQLite database with demo content by default** on Windows, Linux, or macOS. No SQL Server installation is needed for this local mode.
 
-> **Optional baseline setup.** To modernize this application, start with the [.NET modernization workflow](../docs/DOTNET-MODERNIZATION.md). Use this setup guide only when preparing or validating the original application.
+> **Optional local setup.** The main exercise is the [.NET modernization workflow](../docs/DOTNET-MODERNIZATION.md). The historical starting point was .NET Framework 4.7.2/MVC 5; Framework MSBuild/IIS Express instructions apply only to that original revision, not this SDK-style working application.
 
 ## Prerequisites
 
-- Windows with the .NET Framework 4.7.2 targeting/developer pack and Framework 4.7.2 or a compatible in-place newer Framework runtime.
-- Visual Studio / Build Tools with full Framework MSBuild and C# tools. `dotnet build` alone is not the supported build path.
-- IIS Express and SQL Server Express LocalDB (`MSSQLLocalDB`).
-- Internet access for the first NuGet restore. Missing Visual Studio web targets are supplied by the pinned, project-local `MSBuild.Microsoft.VisualStudio.Web.targets` package, not a machine installation.
+- .NET **10 SDK** and internet access for the first NuGet restore.
+- [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (`pwsh`) for these commands and the HTTP checks.
+- A writable directory for the local SQLite database.
+- Optional: a SQL Server connection, or Windows LocalDB, if explicitly selected instead of SQLite.
+
+The optional Codespace already supplies the SDK and PowerShell. Administrator credentials remain required on first startup; no account/password is hardcoded.
 
 ## Restore and build
 
-From this folder in PowerShell:
+From this folder in PowerShell 7:
 
 ```powershell
-$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-$msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
-if (!$msbuild) { throw 'Install full Framework MSBuild / Visual Studio Build Tools.' }
-& $msbuild .\LegacyBlog.sln /restore /p:RestorePackagesConfig=true /p:Configuration=Release /v:minimal
-if ($LASTEXITCODE -ne 0) { throw 'Framework build failed.' }
+dotnet restore .\LegacyBlog.sln
+if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+dotnet build .\LegacyBlog.sln --configuration Release --no-restore
+if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+dotnet test .\LegacyBlog.Tests\LegacyBlog.Tests.csproj --configuration Release --no-build
+if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 ```
-
-`NuGet.Config` fixes the package repository at `dotnet\packages`. Do not pass a relative `RestoreRepositoryPath` that changes this location.
 
 ## First run
 
 Choose a local-only password, not a password used elsewhere:
 
 ```powershell
-$env:BLOG_ADMIN_USER = 'your-admin-name'
+$env:BLOG_ADMIN_USER = Read-Host 'New local administrator username'
 $secret = Read-Host 'New local admin password (12-72 UTF-8 bytes, at least 12 characters)' -AsSecureString
 $env:BLOG_ADMIN_PASSWORD = [PSCredential]::new('local', $secret).GetNetworkCredential().Password
-& "${env:ProgramFiles}\IIS Express\iisexpress.exe" "/path:$PWD\LegacyBlog" /port:5080 /systray:false
+dotnet run --project .\LegacyBlog\LegacyBlog.csproj --configuration Release --no-build --no-launch-profile --urls http://127.0.0.1:5080
 ```
 
-Open `http://localhost:5080`. If that port is already occupied, choose another port and pass that base URL to the smoke checks. Stop IIS Express with `Q` in its console.
+Open `http://localhost:5080`. If that port is occupied, choose another loopback port and pass that URL to the smoke checks. Stop the app with Ctrl+C.
 
 Administrator usernames must have 3-64 ASCII letters, digits, periods, underscores, or hyphens. No account is hardcoded. Missing/invalid first-run credentials fail startup explicitly. Later startups do not change an existing administrator's password, even if environment values differ.
 
+### Default data
+
+On the first startup of an empty database, the existing bootstrap creates:
+
+- **2 categories:** Engineering and Journal.
+- **12 published posts** and **2 private drafts**.
+- **2 comments:** one approved and one pending moderation.
+- The administrator specified by your environment variables.
+
+The stored `sample-v1` marker prevents duplicate/repeated sample seeding. Restarts retain edits, deletions, original login hashes, and publication timestamps. No prebuilt database or credentials are committed.
+
 ### Storage and configuration
 
-The default connection string in `LegacyBlog\Web.config` points to the named database `LegacyBlogDotNet` on `(LocalDB)\MSSQLLocalDB`, using your Windows identity. Override it per process with `BLOG_DOTNET_CONNECTION_STRING`:
+Without an explicit SQL Server connection, the file is `LegacyBlog/.local/blog.db` relative to this folder. The path is based on the app's content root, not your terminal's current directory. The `.local` directory and SQLite sidecar files within it are ignored by Git.
+
+| Configuration | Behavior |
+| --- | --- |
+| `BLOG_DOTNET_DB_PATH` | Optional SQLite file path. Relative paths resolve from the app content root. Missing parent directories are created. Defaults to `.local/blog.db`. |
+| `BLOG_DOTNET_CONNECTION_STRING` | Explicit SQL Server connection; takes priority over SQLite and the named connection below. |
+| `ConnectionStrings:Blog` | A named .NET configuration entry selecting SQL Server. Its standard environment-variable form is `ConnectionStrings__Blog`. |
+| `BLOG_ADMIN_USER` / `BLOG_ADMIN_PASSWORD` | First-run administrator credentials only. They do not reset an existing account. |
+
+For a different persistent SQLite location, set a file path before starting:
 
 ```powershell
-$env:BLOG_DOTNET_CONNECTION_STRING = 'Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=MyLocalBlog;Integrated Security=True;MultipleActiveResultSets=True'
+$env:BLOG_DOTNET_DB_PATH = Join-Path (Join-Path $HOME '.legacyblog-dotnet') 'blog.db'
 ```
 
-EF's explicit `CreateDatabaseIfNotExists` initializer creates the initial schema only. It never drops/recreates an existing database. Incompatible schema changes fail rather than silently resetting data; add an explicit EF6 migration before changing an existing schema. A stored seed marker makes sample initialization repeatable without overwriting content.
+To use Windows LocalDB instead, install/start it and set the connection explicitly:
 
-Logs: `%LOCALAPPDATA%\LegacyBlogDotNet\blog.log`. Unexpected errors are logged there and produce generic responses. Credentials are not intentionally written to logs.
+```powershell
+$env:BLOG_DOTNET_CONNECTION_STRING = 'Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=LegacyBlogDotNet;Integrated Security=True;MultipleActiveResultSets=True'
+```
+
+SQL Server connection failures never fall back to a fresh SQLite database. Blank explicit connection/path settings fail startup. To return to SQLite, remove the SQL Server override from your process/configuration rather than setting it to an empty string.
+
+Switching providers does **not** migrate existing data. A newly seeded SQLite file is a convenient demo, not proof of SQL Server migration compatibility. Back up existing data and use the approved migration plan for any conversion.
+
+EF Core `EnsureCreated` creates an initial schema only; it does not drop or migrate an existing database. Stop the application before backing up its SQLite files. To deliberately start a new demo, choose a new database path rather than deleting an existing database. Do not run multiple instances against the same file.
+
+Startup/request diagnostics are written through ASP.NET Core logging to the application console. Treat logs as local diagnostics and never save real passwords or connection strings in source control.
 
 ## Verify
 
-Keep IIS Express running, and set the original admin credentials in another PowerShell window:
+Keep the app running, and set the original admin credentials in another PowerShell 7 terminal from this folder:
 
 ```powershell
-$env:BLOG_ADMIN_USER = 'your-admin-name'
+$env:BLOG_ADMIN_USER = Read-Host 'Existing local administrator username'
 $secret = Read-Host 'Existing local admin password' -AsSecureString
 $env:BLOG_ADMIN_PASSWORD = [PSCredential]::new('local', $secret).GetNetworkCredential().Password
 ..\scripts\Test-Blogs.ps1 -App DotNet -DotNetBaseUrl http://localhost:5080
 ```
 
-For persistence, create and publish a post, stop IIS Express, start it again with the same connection string, and verify its public URL and the original admin login. Seed records must not multiply or overwrite your edit.
+For persistence, create/publish a post, stop the app, start it again with the same database, and verify the public URL and original admin login. Seed records must not multiply or overwrite edits.
 
-### Verification performed in this workspace
+### Disposable regression checks
 
-- Release build succeeded against the Framework **4.7.2 reference assemblies**, with the installed in-place **Framework 4.8.1 runtime** hosting IIS Express.
-- The expanded disposable regression suite passes **66 HTTP/form/restart assertions** using PowerShell 7. The original 52-assertion smoke suite was also previously verified under Windows PowerShell 5.1.
-- A published post and the original administrator login survived a complete IIS Express process restart without bootstrap credentials.
-- Disposable test records were cleaned up; baseline counts and seed state were checked separately.
-- The desktop public layout was rendered and visually inspected using the installed Edge browser.
-
-Run the automated build, isolated IIS Express/LocalDB setup, and full restart regression test from the repository root on Windows:
+From the repository root:
 
 ```sh
 pwsh -File scripts/Test-ApplicationBaseline.ps1 -App DotNet
 ```
 
-For a clean checkout with missing NuGet packages, append `-Restore`. The runner creates a uniquely named LocalDB instance and temporary database files, restarts IIS Express **without bootstrap credentials**, and removes only its own instance/files when finished. Publication timestamps, comment cascade deletion, original credentials, seed identities, and fixture isolation are checked. These regressions are wired into the [PR validation workflow](../.github/workflows/validate.yml); hosted execution still needs verification after pushing.
+Append `-Restore` when packages need restoring. The runner builds/tests the .NET application, starts Kestrel with a temporary SQLite file and disposable test credentials, restarts the process **without bootstrap credentials**, and removes only its own resources afterward. It does not use your normal blog database.
+
+The suite checks HTTP/forms, route-ID overposting, publication timestamps, comment deletion, original logins, seed identities, and restart persistence. The [PR validation workflow](../.github/workflows/validate.yml) provisions .NET 10 and uses the same runner. Hosted CI and native Linux/macOS runs remain unverified locally.
+
+SQL Server provider-selection tests do not establish live SQL Server compatibility. The opt-in SQL Server test requires `BLOG_TEST_SQLSERVER_CONNECTION_STRING` and an appropriately isolated SQL Server instance.
 
 ## Source-only security exercises
 
@@ -87,9 +116,9 @@ The [vulnerable C# examples](security-examples/VulnerableExamples.cs) deliberate
 
 ## Troubleshooting and limitations
 
-- Restore missing packages before building. Ensure the 4.7.2 reference assemblies are present; an installed modern .NET SDK is not a substitute.
-- If LocalDB is stopped, run `SqlLocalDB start MSSQLLocalDB` under the same Windows user.
-- A startup database/credential failure is not a successful empty blog. Check the local log and environment.
+- Restore missing packages and ensure .NET 10 is selected by `dotnet --version`.
+- SQLite requires a writable database directory. If you explicitly chose LocalDB, run `SqlLocalDB start MSSQLLocalDB` under the same Windows user.
+- A startup database/credential failure is not a successful empty blog. Check the application console and configured environment.
 - Invalid CSRF tokens return 400. Invalid forms redisplay field-level validation; missing/private posts return 404.
 - Content is plain text, not trusted HTML. Route IDs are explicitly bound from the URL, not from posted fields.
-- These dependency lines are intentionally old and not certified production-safe. Local HTTP, one administrator, and no rate limiter/email/password reset are deliberate sample boundaries.
+- This is not a production template. Local HTTP, one administrator, and no rate limiter/email/password reset are deliberate sample boundaries.

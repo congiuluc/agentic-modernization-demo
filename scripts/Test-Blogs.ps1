@@ -289,7 +289,7 @@ function Test-Engine([string]$Name, [string]$Base) {
 
 if ($RestartApplication -and $App -eq 'All') { throw 'A restart callback requires selecting one application.' }
 if (!$env:BLOG_ADMIN_USER -or !$env:BLOG_ADMIN_PASSWORD) { throw 'Set BLOG_ADMIN_USER and BLOG_ADMIN_PASSWORD to the existing administrator credentials.' }
-if ($App -in @('DotNet', 'All')) { Test-Engine 'Framework 4.7.2' $DotNetBaseUrl }
+if ($App -in @('DotNet', 'All')) { Test-Engine '.NET blog' $DotNetBaseUrl }
 if ($App -in @('Java', 'All')) { Test-Engine 'Java 11' $JavaBaseUrl }
 if ($script:CleanupFailed) { throw 'One or more smoke test cleanup operations failed.' }
 Write-Host "`nAll $script:Checks smoke assertions passed."

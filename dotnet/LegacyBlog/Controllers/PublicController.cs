@@ -7,11 +7,11 @@ namespace LegacyBlog.Controllers;
 public class PublicController(BlogService blogs) : BlogController(blogs)
 {
     [HttpGet("/"), HttpGet("/categories/{slug}")]
-    public IActionResult Index(string? slug, string page = "1") => View(Blogs.List(true, slug, page));
+    public IActionResult Index([FromRoute] string? slug, string page = "1") => View(Blogs.List(true, slug, page));
     [HttpGet("/posts/{slug}")]
-    public IActionResult Detail(string slug) => DetailView(slug, new CommentForm());
+    public IActionResult Detail([FromRoute] string slug) => DetailView(slug, new CommentForm());
     [HttpPost("/posts/{slug}/comments"), ValidateAntiForgeryToken]
-    public IActionResult Comment(string slug, [Bind("Author,Body")] CommentForm form)
+    public IActionResult Comment([FromRoute] string slug, [Bind("Author,Body")] CommentForm form)
     {
         Blogs.PublicPost(slug);
         if (!ModelState.IsValid) return DetailView(slug, form);

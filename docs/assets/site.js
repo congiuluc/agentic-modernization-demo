@@ -4,9 +4,10 @@
   const status = document.getElementById("ui-status");
 
   function syncTheme() {
-    const next = document.documentElement.dataset.theme === "dark" ? "Light" : "Dark";
-    themeButton.textContent = `${next} theme`;
-    themeButton.setAttribute("aria-label", `Switch to ${next.toLowerCase()} theme`);
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    const label = `Switch to ${next} theme`;
+    themeButton.setAttribute("aria-label", label);
+    themeButton.title = label;
     document.querySelectorAll("a[href]").forEach((link) => {
       const url = new URL(link.getAttribute("href"), location.href);
       if (url.origin === location.origin && url.pathname !== location.pathname) {
@@ -22,15 +23,15 @@
     url.searchParams.set("scoutTheme", next);
     history.replaceState(null, "", url);
     syncTheme();
-    let printTheme;
-    window.addEventListener("beforeprint", () => {
-      printTheme = document.documentElement.dataset.theme;
-      document.documentElement.dataset.theme = "light";
-    });
-    window.addEventListener("afterprint", () => {
-      if (printTheme) document.documentElement.dataset.theme = printTheme;
-      printTheme = undefined;
-    });
+  });
+  let printTheme;
+  window.addEventListener("beforeprint", () => {
+    printTheme = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = "light";
+  });
+  window.addEventListener("afterprint", () => {
+    if (printTheme) document.documentElement.dataset.theme = printTheme;
+    printTheme = undefined;
   });
   syncTheme();
 

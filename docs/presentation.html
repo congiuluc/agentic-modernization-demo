@@ -84,12 +84,17 @@
     .skip-link:focus { transform: translateY(0); }
     .requires-js { display: none; }
     .js .requires-js { display: inline-flex; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem clamp(1rem, 4vw, 4rem); color: var(--cp-text); border-bottom: 1px solid rgba(255, 255, 255, 0.24); background: linear-gradient(110deg, #123d75, #343d8c 62%, #0e596b); box-shadow: 0 4px 18px rgba(7, 30, 67, 0.16); --cp-text: #ffffff; --cp-text-soft: #e0ecff; --cp-accent: #ffffff; --cp-accent-hover: #ffffff; --cp-accent-soft: rgba(255, 255, 255, 0.14); --cp-border: rgba(255, 255, 255, 0.28); --cp-surface: rgba(255, 255, 255, 0.08); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem clamp(1rem, 4vw, 4rem); color: var(--cp-text); border-bottom: 1px solid rgba(255, 255, 255, 0.24); background: linear-gradient(110deg, #123d75, #343d8c 62%, #0e596b); box-shadow: 0 4px 18px rgba(7, 30, 67, 0.16); --cp-text: #ffffff; --cp-text-soft: #e0ecff; --cp-accent: #ffffff; --cp-accent-hover: #ffffff; --cp-accent-soft: rgba(255, 255, 255, 0.14); --cp-border: rgba(255, 255, 255, 0.28); --cp-surface: rgba(255, 255, 255, 0.08); }
     .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; font-weight: 750; letter-spacing: -0.02em; }
     .brand svg { width: 1.75rem; height: 1.75rem; color: var(--cp-accent); }
     .brand-secondary { display: block; color: var(--cp-text-soft); font-size: 0.75rem; font-weight: 500; letter-spacing: 0; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .toolbar button, .toolbar a { padding: 0.375rem 0.75rem; font-size: 0.8rem; }
+    .toolbar .theme-button { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; }
+    .theme-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; pointer-events: none; }
+    .theme-icon-sun { display: none; }
+    html[data-theme="dark"] .theme-icon-sun { display: block; }
+    html[data-theme="dark"] .theme-icon-moon { display: none; }
     .guide-button { display: inline-flex; align-items: center; gap: 0.375rem; color: var(--cp-text); border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); text-decoration: none; }
     .guide-button:hover { color: var(--cp-accent); border-color: var(--cp-accent); }
     .chapter-nav { display: none; align-items: center; gap: 0.5rem; padding: 0.625rem clamp(1rem, 4vw, 4rem); background: var(--cp-bg-elevated); border-bottom: 1px solid var(--cp-border); }
@@ -246,7 +251,10 @@
     <div class="toolbar requires-js" aria-label="Presentation tools">
       <a class="guide-button" data-guide-link href="../README.md">Field guide <span aria-hidden="true">&nearr;</span></a>
       <button id="contents-button" type="button" aria-haspopup="dialog">Slides</button>
-      <button id="theme-button" type="button" aria-label="Switch color theme">Theme</button>
+      <button class="theme-button" id="theme-button" type="button" aria-label="Switch color theme" title="Switch color theme">
+        <svg class="theme-icon theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+        <svg class="theme-icon theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10Z"/></svg>
+      </button>
       <button id="fullscreen-button" type="button">Fullscreen</button>
       <button id="print-button" type="button">Print / PDF</button>
     </div>
@@ -297,7 +305,7 @@
       <h2 id="title-3">Two stacks. One behavior contract.</h2>
       <p class="lead">Independent blog engines with equivalent publishing, authentication, and moderation workflows.</p>
       <div class="grid">
-        <div class="card"><span class="tag accent">dotnet/</span><h3>ASP.NET MVC 5</h3><ul><li>.NET Framework 4.7.2 and Razor / System.Web.</li><li>Entity Framework 6 and SQL Server LocalDB.</li><li>Classic MSBuild and IIS Express.</li></ul><p class="small"><strong>Windows required</strong> for the legacy build and runtime.</p></div>
+        <div class="card"><span class="tag accent">dotnet/</span><h3>.NET 10 working copy</h3><ul><li>Original baseline: .NET Framework 4.7.2 / MVC 5.</li><li>Now ASP.NET Core / EF Core with local SQLite.</li><li>SQL Server remains an explicit option.</li></ul><p class="small"><strong>Portable local demo.</strong> Original Framework or LocalDB checks still require Windows.</p></div>
         <div class="card"><span class="tag accent">java/</span><h3>Spring MVC 5</h3><ul><li>Java 11, Spring Security 5, Hibernate 5.</li><li>JSP views and persistent file-based H2.</li><li>Maven WAR deployed to Tomcat 9.</li></ul><p class="small"><strong>Not Spring Boot.</strong> Do not introduce it implicitly.</p></div>
       </div>
       <p class="note">Preserve public routes, drafts, pagination, admin CRUD, CSRF protection, comment approval, original logins, and persistent data.</p>
@@ -384,7 +392,7 @@ $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, 
       <p class="lead">After approval, execute in the same terminal and application folder. Inspect all branch changes, then return to the repository root and rerun regression checks.</p>
       <pre><code>modernize plan execute --plan-name $planName --delegate local</code></pre>
       <div class="grid three">
-        <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and IIS Express / LocalDB restart persistence.</p></div>
+        <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and Kestrel / SQLite restart persistence.</p></div>
         <div class="card"><span class="metric">67</span><h3>Java assertions</h3><p>Actual Java 11 / Tomcat 9, JSP rendering, correct 405 responses, and container-replacement persistence.</p></div>
         <div class="card"><span class="metric">31</span><h3>Wrapper checks</h3><p>Offline checks on Windows and Linux, including explicit errors and rejection of linked assessment inputs.</p></div>
       </div>
@@ -553,8 +561,9 @@ Stop after planning for my approval.</code></pre><p>Then show the optional CI as
 
       function updateThemeButton() {
         const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-        themeButton.textContent = `${nextTheme[0].toUpperCase()}${nextTheme.slice(1)} theme`;
-        themeButton.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+        const label = `Switch to ${nextTheme} theme`;
+        themeButton.setAttribute("aria-label", label);
+        themeButton.title = label;
         if (location.protocol !== "file:") {
           const guide = new URL("../", location.href);
           guide.searchParams.set("scoutTheme", document.documentElement.dataset.theme);
