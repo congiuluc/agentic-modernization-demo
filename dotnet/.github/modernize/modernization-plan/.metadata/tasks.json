@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "LegacyBlog modernization to .NET 10 with Aspire observability and SQLite-backed integration testing. No deployment is included.",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-dotnet-10",
+      "status": "success",
+      "taskSummary": "Migrated LegacyBlog to ASP.NET Core MVC on .NET 10 with SQL Server persistence, authentication, administration, and regression tests. Release build passed and 8 tests passed; live production SQL Server compatibility remains unverified.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "description": "Upgrade LegacyBlog from .NET Framework 4.7.2 to the latest LTS, .NET 10, retaining its blog, admin, authentication, and SQL Server behaviors. Addresses issues: Windows authentication detected (LocalDB integrated SQL authentication), SQL database connection detected, System.Data.SqlClient dependency detected, Connection strings without configuration builders detected, Static content detected.",
+      "reason": "The current MVC 5/System.Web project cannot run on .NET 10 and must retain its features and data behavior across the runtime migration.",
+      "requirements": "Migrate the non-SDK MVC 5 web app, server-rendered views, OWIN cookie authentication, ASP.NET Identity data and roles, EF6 database model, and configuration to supported .NET 10 equivalents. Preserve existing URLs, validation, authorization, antiforgery behavior, database data and seed idempotence; retain production SQL Server compatibility and external configuration. Do not replace SQL Server with SQLite in production. The .NET upgrade engineer owns the detailed changes.",
+      "dependencies": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "setupBaseline",
+      "id": "002-setupBaseline",
+      "status": "failed",
+      "taskSummary": "Retried baseline capture from pre-migration commit 495ebc0263443dcd488cca69d86dace0132336e5. The baseline agent again could not write the frozen test-case bundle; no baseline artifacts were created, and the original build and tests were not run.",
+      "successCriteriaStatus": {
+        "passBuild": "false",
+        "passUnitTests": "false"
+      },
+      "description": "Capture the current blog's behavior and external dependency decisions before migration. Addresses issues: SQL database connection detected, Windows authentication detected (LocalDB integrated SQL authentication).",
+      "reason": "A frozen behavior specification is needed to compare the upgraded app and its SQLite-backed integration tests with the source application.",
+      "requirements": "Use the built-in create-test-baseline skill. Snapshot the main source folder LegacyBlog relative to the project root, and use the existing baseline runner and blog flows to record relevant public, admin, authentication, persistence, and error behavior. Freeze the test cases, test data, and infra-decision-table in the baseline bundle. Record SQL Server LocalDB as a source dependency and SQLite as the agreed integration-test substitute; do not alter source or require Azure infrastructure.",
+      "dependencies": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-aspire-observability",
+      "description": "Add Aspire-based monitoring to the upgraded blog, replacing file-only diagnostics with observable logs, traces, and metrics. Addresses issues: Logging to local or network paths detected, Local or network IO operations detected, Local OS environment access detected, CWE-778: Insufficient Logging.",
+      "reason": "Writing diagnostics only to a local application-data file makes errors and operational health hard to observe outside a single Windows host.",
+      "requirements": "Integrate the upgraded application with Aspire observability and expose useful request, error, and authentication outcome telemetry without logging credentials or sensitive user content. Remove the local log directory/file dependency, retain actionable error reporting, and keep monitoring usable in local development and automated tests. No Azure monitoring service or production deployment is requested.",
+      "dependencies": [
+        "001-upgrade-dotnet-10"
+      ],
+      "skills": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "integrationTest",
+      "id": "004-integrationTest",
+      "description": "Build Aspire-backed integration tests for the migrated blog and run post-migration verification using SQLite. Addresses issues: SQL database connection detected, Windows authentication detected (LocalDB integrated SQL authentication), Logging to local or network paths detected, CWE-778: Insufficient Logging.",
+      "reason": "The migrated app needs repeatable end-to-end validation of its core behaviors and telemetry without dependence on a Windows-only LocalDB instance.",
+      "requirements": "Use the built-in integration-tests skill. Reuse the frozen baseline test cases and dependency decisions. Use SQLite for isolated relational test data while leaving production SQL Server unchanged. Exercise the upgraded app through Aspire-backed integration tests for public pages, administrative login and authorization, content and comment persistence, errors, and observable diagnostics. Document and check any SQL Server/SQLite behavior differences that could affect the tested flows; do not claim SQLite proves production SQL Server provider compatibility.",
+      "dependencies": [
+        "002-setupBaseline",
+        "001-upgrade-dotnet-10",
+        "003-transform-aspire-observability"
+      ]
+    },
+    {
+      "type": "security",
+      "id": "005-security-cve-remediation",
+      "description": "Scan the upgraded blog dependencies for CVEs and remediate confirmed application security findings. Addresses issues: CWE-772: Missing Release of Resource after Effective Lifetime, CWE-778: Insufficient Logging; reassess CWE-662, CWE-820, CWE-821, CWE-567 and CWE-775 against migrated code before remediation.",
+      "reason": "The upgraded dependency graph and application lifetime handling should not ship with known vulnerabilities or confirmed resource leaks.",
+      "requirements": "Use the built-in validate-cves-and-fix skill. Scan production and test dependencies for known CVEs; upgrade vulnerable packages to minimum patched versions. If a fix requires a major upgrade, document the package, old/new major versions, and breaking-change risk. Review user-manager and database resource lifetimes and the assessment's concurrency and handle findings; fix only verified issues in the running application. Confirm safe authentication-failure diagnostics without exposing credentials. The CWE-89 and CWE-79 findings are in the deliberately vulnerable, source-only security-examples/VulnerableExamples.cs fixture: preserve its exclusion from the app instead of treating it as production code. Rebuild and rerun relevant tests after remediation.",
+      "dependencies": [
+        "004-integrationTest"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan",
+    "projectName": "LegacyBlog",
+    "language": "dotnet",
+    "createdAt": "2026-10-20T16:55:58+02:00",
+    "version": "1.0"
+  }
+}

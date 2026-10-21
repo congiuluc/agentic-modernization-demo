@@ -1,30 +1,53 @@
 using System.Security.Claims;
-using System.Web;
-using System.Web.Mvc;
 using LegacyBlog.Data;
+using LegacyBlog.Models;
+using LegacyBlog.Services;
 using LegacyBlog.ViewModels;
-using Microsoft.AspNet.Identity;
-using Microsoft.Owin.Security;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
-namespace LegacyBlog.Controllers
+namespace LegacyBlog.Controllers;
+
+public class AccountController(BlogService blogs, BlogContext db) : BlogController(blogs)
 {
-    public class AccountController : BlogController
+    [HttpGet("/account/login")]
+    public IActionResult Login(string? returnUrl) => View(new LoginForm { ReturnUrl = returnUrl });
+
+    [HttpPost("/account/login"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login([Bind("Username,Password,ReturnUrl")] LoginForm form)
     {
-        [HttpGet, Route("account/login")]
-        public ActionResult Login(string returnUrl) { return View(new LoginForm { ReturnUrl = returnUrl }); }
-        [HttpPost, ValidateAntiForgeryToken, Route("account/login")]
-        public ActionResult Login([Bind(Include = "Username,Password,ReturnUrl")] LoginForm form)
+        if (!ModelState.IsValid) return View(form);
+        var user = await db.Users.SingleOrDefaultAsync(u => u.UserName == form.Username);
+        var hasher = new PasswordHasher<BlogUser>(Options.Create(new PasswordHasherOptions { CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV2 }));
+        if (user == null || string.IsNullOrEmpty(user.PasswordHash) ||
+            hasher.VerifyHashedPassword(user, user.PasswordHash, form.Password) == PasswordVerificationResult.Failed ||
+            (user.LockoutEnabled && user.LockoutEndDateUtc > DateTime.UtcNow))
         {
-            if (!ModelState.IsValid) return View(form);
-            var manager = Bootstrap.UserManager(Db);
-            var user = manager.Find(form.Username, form.Password);
-            if (user == null) { ModelState.AddModelError("", "Invalid username or password."); return View(form); }
-            var identity = manager.CreateIdentity(user, "BlogCookie");
-            identity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
-            Request.GetOwinContext().Authentication.SignIn(new AuthenticationProperties { IsPersistent = false }, identity);
-            return Redirect(Url.IsLocalUrl(form.ReturnUrl) ? form.ReturnUrl : "/admin");
+            ModelState.AddModelError("", "Invalid username or password.");
+            return View(form);
         }
-        [HttpPost, ValidateAntiForgeryToken, Route("account/logout")]
-        public ActionResult Logout() { Request.GetOwinContext().Authentication.SignOut("BlogCookie"); return Redirect("/"); }
+        var roles = await db.UserRoles.Where(r => r.UserId == user.Id).Select(r => r.Role.Name).ToListAsync();
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, user.Id), new(ClaimTypes.Name, user.UserName) };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)), new AuthenticationProperties { IsPersistent = false });
+        return LocalRedirect(Url.IsLocalUrl(form.ReturnUrl) ? form.ReturnUrl! : "/admin");
+    }
+
+    [HttpPost("/account/logout"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Redirect("/");
+    }
+
+    [HttpGet("/account/denied")]
+    public IActionResult Denied()
+    {
+        Response.StatusCode = 403;
+        return View("~/Views/Shared/Error.cshtml", "The request was rejected.");
     }
 }

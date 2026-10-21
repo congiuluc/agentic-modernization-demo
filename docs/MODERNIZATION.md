@@ -20,6 +20,7 @@ Choose your path through the repository:
 | --- | --- |
 | Understand the agent and this repository | [14-slide HTML presentation](presentation.html) |
 | Assess and modernize one application | [Guided modernization workflow](#modernization-workflow) |
+| Customize assessment coverage and targets | [Optional assessment configuration](#optional-assessment-configuration) |
 | Build and run the original applications | [.NET setup](../dotnet/README.md) or [Java setup](../java/README.md) |
 | Run assessments automatically | [GitHub Actions and Azure DevOps templates](#optional-automated-assessment) |
 | Verify changes before merging | [Required regression checks](#required-regression-checks) |
@@ -44,13 +45,23 @@ The applications are independent, feature-equivalent blogs: ASP.NET MVC 5 on .NE
 - Source and proposed target SDKs/JDKs as required by the selected upgrade. Keep the Framework MSBuild tools installed until the legacy .NET baseline no longer needs them.
 - [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (`pwsh`) on any platform to run the HTTP smoke checks.
 
-VS Code is optional for reviewing and editing the generated plan; its modernization extension is not required for this CLI workflow. Use the current [agent quickstart](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart) if installation or menu options change. Cloud assessment or deployment steps can have additional prerequisites; do not provision Azure resources as part of the local upgrade exercise.
+VS Code is optional for reviewing and editing the generated plan; its modernization extension is not required for this CLI workflow. Use the current [agent quickstart](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart) for installation and the [CLI reference](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/cli-commands) for command options. Cloud assessment or deployment steps can have additional prerequisites; do not provision Azure resources as part of the local upgrade exercise.
 
 **Platform boundary:** the Modernize CLI supports all three operating systems, but the existing .NET Framework/MSBuild, IIS Express, and SQL Server LocalDB baseline requires **Windows**. Use Windows for its local build, execution, and validation. Linux/macOS can run the agent, but cannot complete that legacy application's local build/runtime checks. Java builds and hosting can use the appropriate JDK, Maven, and Tomcat on any supported OS; the Java setup guide uses cross-platform PowerShell 7 commands and selects the appropriate Tomcat launcher.
 
-**Shell conventions:** shared `sh` command blocks below use commands that also work in Windows PowerShell. Run `powershell` blocks in PowerShell 7 on any OS, except the Windows-only installer. Run `bash` blocks in Bash/Zsh on Linux/macOS. Application-folder and smoke-check examples start at the repository root.
+**Shell conventions:** shared `sh` command blocks below use commands that also work in Windows PowerShell. Run `powershell` blocks in PowerShell 7 on any OS, except the Windows-only installer. Run `bash` blocks in Bash/Zsh on Linux/macOS. Choose an application from the repository root, then keep the same PowerShell 7 terminal and application folder for assessment, planning, and execution. Return to the repository root for regression checks.
 
 ## Modernization workflow
+
+**The short version:** establish a baseline, then run these three CLI commands for one application. No interactive menu navigation is required.
+
+| Stage | Command | Before continuing |
+| --- | --- | --- |
+| Assess | `modernize assess` | Read the generated report. |
+| Plan | `modernize plan create "<goal>" --assess-file-path "<report-file>" --plan-name blog-upgrade` | Review and approve the generated plan. |
+| Execute | `modernize plan execute --plan-name blog-upgrade --delegate local` | Rerun regression and restart/persistence checks. |
+
+The steps below provide copy-and-paste commands with application-specific goals and the assessment report as planning input. Run execution separately, only after approval; do not replace these stages with `modernize upgrade`, which combines planning and execution.
 
 ### 1. Install and authenticate the agent
 
@@ -91,56 +102,122 @@ Follow your organization's software-installation and GitHub authentication polic
 
 ### 3. Assess one application
 
-From the repository root, choose **one** application folder and launch the agent. For the .NET application:
+From the repository root, choose **one** application. Copy only the matching block into PowerShell 7.
 
-```sh
-cd dotnet
-modernize
+**.NET (Windows):**
+
+```powershell
+Set-Location dotnet
+modernize assess --format markdown --delegate local
 ```
 
-For a separate Java run, start from the repository root instead:
+**Java (Windows, Linux, or macOS):**
 
-```sh
-cd java
-modernize
+```powershell
+Set-Location java
+modernize assess --format markdown --delegate local
 ```
 
-In the interactive menu:
+The current application folder is the assessment source. Results are saved under `.github/modernize/assessment/` in that folder. Review the report before planning; findings are not evidence that an upgrade has succeeded.
 
-1. Select **Assess**.
-2. Select **Current folder**, or **Manual input** to specify the intended application path. Verify that the assessment scope is only the selected application, not both implementations.
-3. Select the relevant assessment domains offered for the application, such as runtime/framework upgrade and, optionally, **Cloud Readiness**.
-4. Review **Analysis Coverage**, **Target Runtime**, and the other assessment settings before choosing **Continue**. Do not accept a target version without checking compatibility.
-5. Select **Assess locally** for this exercise, rather than **Delegate to Cloud Agents**.
-6. Accept the default output path or choose a custom path, then run the assessment and review its findings.
+To customize the assessment, use the [optional YAML configuration](#optional-assessment-configuration) below **instead of** the default assessment command. Review its domains, analysis coverage, and target runtime first; a configured target is not approval to execute an upgrade.
 
-By default, assessment results are saved under `.github/modernize/assessment/` in the selected project directory. Findings identify outdated dependencies, deprecated APIs, compatibility issues, and migration opportunities; they are not evidence that an upgrade has succeeded.
+`--delegate local` runs the agent on this machine, not offline: AI analysis can use GitHub Copilot services and consume Copilot requests. Do not add `--no-tty` for this walkthrough; reserve it for the [optional automated assessment](#optional-automated-assessment).
+
+In the **same terminal and application folder**, list the generated files, then paste the full path of the report you reviewed when prompted. Choose the report for this application and this assessment run, not an older result or the output directory:
+
+```powershell
+Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+$assessmentReport = Read-Host "Paste the full path of the assessment report file"
+```
+
+#### Optional assessment configuration
+
+**You do not need a configuration file to follow this guide.** Use one when you want repeatable assessment settings, a specific comparison target, or the same options locally and in CI. `modernize.yaml` is a convenient filename, not a required name.
+
+Save the following as `modernize.yaml` in the selected **.NET application folder**:
+
+```yaml
+analysisCoverage: full
+dotnet:
+  assessmentDomains:
+    - cloud-readiness
+    - framework-upgrade
+  targetRuntime: net10.0
+```
+
+From that application folder, use this command **as the alternative to the default assessment command in step 3**, not as a second assessment you must run:
+
+```powershell
+modernize assess --assess-config .\modernize.yaml --format markdown --delegate local
+```
+
+Pass the file explicitly with `--assess-config`; do not assume the CLI loads an arbitrary `modernize.yaml` automatically. Relative paths are resolved from your terminal's current directory. If you run from the repository root instead, use `--source .\dotnet --assess-config .\dotnet\modernize.yaml`.
+
+**Fields used by the .NET example:**
+
+| YAML parameter | Type / example values | Meaning |
+| --- | --- | --- |
+| `analysisCoverage` | String; `full` | Runs issue analysis and adds codebase insights: architecture, API contracts, configuration, business workflows, dependencies, and data model. Leave unset to use the CLI's configured/default coverage; the documented default is issue-only analysis. Full coverage does not automatically enable every assessment domain. |
+| `dotnet` | Mapping | Groups .NET-specific settings. Do not copy this section into a Java-only configuration. |
+| `dotnet.assessmentDomains` | List of strings; `framework-upgrade`, `cloud-readiness` | Selects the .NET assessment domains. `framework-upgrade` evaluates framework/runtime upgrade compatibility. `cloud-readiness` evaluates Azure migration readiness; it does not provision resources or authorize deployment. For an upgrade-only assessment, keep only `framework-upgrade`. |
+| `dotnet.targetRuntime` | String; for example `net10.0` | Target framework moniker used for the upgrade assessment. `net10.0` means .NET 10. Choose a target supported by your CLI and check application/dependency compatibility; this setting does not retarget the project or approve the plan. |
+
+**Minimal Java example:** save this as `modernize.yaml` in the Java application folder and use the same `--assess-config` command from there. It requests full analysis while leaving language-specific settings at the CLI's defaults:
+
+```yaml
+analysisCoverage: full
+```
+
+The official assessment documentation also describes these language-specific settings. The display names below are **not YAML property names**; use the configuration emitted by your installed CLI, when available, for the exact version-specific keys rather than guessing them:
+
+| Additional setting | Applies to | Documented choices / effect |
+| --- | --- | --- |
+| Target runtime | Java | OpenJDK 11, 17, 21, or 25 in the documented CLI UI. Choose a compatible JDK/framework/container combination, not simply the highest number. |
+| Target compute services | Java and .NET cloud readiness | Selects the Azure hosting services against which readiness is assessed. This is an assessment scope, not a deployment request. |
+| Target operating system and containerization | Java cloud readiness | Describes the intended hosting OS and whether a containerized target is considered. |
+| Security domain and minimum CVE severity | Java | The documented security domain is Java-only. Severity choices are `low`, `medium`, `high`, and `critical`; the documented default is `high`. Lower thresholds include more findings. Do not add an undocumented .NET security domain to the YAML. |
+
+**YAML settings versus CLI options:** source selection, report output, execution mode, and model selection stay on the command line; they are not keys to add to the sample YAML.
+
+| CLI option | Values / example | Purpose |
+| --- | --- | --- |
+| `--assess-config` | `.\modernize.yaml` | Selects the assessment YAML file and overrides the corresponding default assessment settings. |
+| `--source` | `.\dotnet` or `.\java`; current directory if omitted | Selects the application to assess. A JSON repository list can also be passed here for batch assessment; it is not an assessment YAML file. |
+| `--output-path` | A report directory | Changes where reports are written; default is `.github/modernize/assessment/`. Use an appropriate ignore and retention policy for custom directories. |
+| `--format` | `markdown` or `html` | Selects the report format; CLI default is `html`, while this guide uses `markdown`. |
+| `--delegate` | `local` or `cloud` | Selects execution on this machine or delegation to a cloud agent. This guide uses `local`; neither value means offline AI processing. |
+| `--model` | A model ID from `modernize help models` | Overrides model selection for the assessment. Availability and request usage depend on your account. |
+| `--no-tty` | Switch | Disables terminal interaction for automation. Ensure all inputs are supplied before using it in CI. |
+
+For CI, pass the repository-relative YAML path through `assessment-config` in the [GitHub Actions template](../.github/workflows/modernization-assessment-template.yml), `assessmentConfig` in the [Azure DevOps template](../.azdo/templates/modernization-assessment.yml), or `-AssessmentConfig` when invoking the [shared runner](../scripts/Invoke-ModernizationAssessment.ps1). For example, the .NET path is `dotnet\modernize.yaml`; the runner resolves it from the repository root and passes it as an absolute `--assess-config` path.
+
+Keep credentials, connection strings, tokens, and real database contents out of assessment configuration. Keep the reviewed YAML in source control when you need reproducible settings; generated reports and agent state remain ignored.
+
+These examples document the fields used by this demo, not an exhaustive, version-independent YAML schema. The [official assessment guide](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/batch-assess), [CLI README](https://github.com/microsoft/modernize-cli#assess), and `modernize assess --help` are the references for your installed version. The current CLI README also documents discovery of `.github/modernize/assessment/reports/assessment-config.yaml`; passing `--assess-config` explicitly avoids depending on that discovery behavior.
 
 ### 4. Generate and approve a plan
 
-After assessment:
+Run only the block for your selected application below. It sets the goal and plan name, then calls `modernize plan create` with your assessment report. Answer any clarification questions and inspect the generated `.github/modernize/{plan-name}/plan.md` and `tasks.json` in the application folder.
 
-1. Select **Create modernization plan**.
-2. Select **Keep the plan local**.
-3. Use the newly generated assessment report as input.
-4. Enter a descriptive plan name, such as `dotnet-blog-upgrade` or `java-blog-upgrade`.
-5. **Replace the default goal**, which includes migration to Azure, with an application-specific local upgrade goal below.
-6. Answer the agent's clarification questions and review the generated `.github/modernize/{plan-name}/plan.md`. Edit the plan if needed.
-
-The plan must specify target versions, ordered tasks, compatibility decisions, data/rollback strategy, and measurable success criteria. Do not proceed to execution until these decisions are approved.
+The plan must specify target versions, ordered tasks, compatibility decisions, data/rollback strategy, and measurable success criteria. Edit it if needed. **Stop here until the target and plan are approved.**
 
 #### .NET planning goal
 
-The [dotnet](../dotnet) application contains [LegacyBlog.sln](../dotnet/LegacyBlog.sln). It is ASP.NET MVC 5 on .NET Framework 4.7.2, not ASP.NET Core. Enter the following as the modernization goal:
+The [dotnet](../dotnet) application contains [LegacyBlog.sln](../dotnet/LegacyBlog.sln). It is ASP.NET MVC 5 on .NET Framework 4.7.2, not ASP.NET Core. From the `dotnet` folder, run:
 
-```text
-Plan the modernization of only dotnet/LegacyBlog.sln. Compare an in-place
+```powershell
+$planName = "dotnet-blog-upgrade"
+$goal = @'
+Plan the modernization of only LegacyBlog.sln in the current folder. Compare an in-place
 .NET Framework upgrade with migration to a currently supported .NET LTS
 and ASP.NET Core MVC. Recommend targets and explain compatibility, data,
 authentication, hosting, and testing risks. Preserve existing routes and
 behavior. Keep execution local; do not add Azure services or deploy.
 Stop after planning; do not change application code or install tools
 until I approve the target and plan.
+'@
+modernize plan create $goal --plan-name $planName --language dotnet --assess-file-path $assessmentReport --delegate local
 ```
 
 Review these repository-specific concerns before approving a plan:
@@ -153,10 +230,12 @@ Review these repository-specific concerns before approving a plan:
 
 #### Java planning goal
 
-The [java](../java) application contains [pom.xml](../java/pom.xml). It is a Java 11 Maven WAR with Spring MVC 5, Spring Security 5, Hibernate 5, JSP, H2, and Tomcat 9. It is **not Spring Boot**. Enter the following as the modernization goal:
+The [java](../java) application contains [pom.xml](../java/pom.xml). It is a Java 11 Maven WAR with Spring MVC 5, Spring Security 5, Hibernate 5, JSP, H2, and Tomcat 9. It is **not Spring Boot**. From the `java` folder, run:
 
-```text
-Plan the modernization of only the Java 11 Maven WAR under java.
+```powershell
+$planName = "java-blog-upgrade"
+$goal = @'
+Plan the modernization of only the Java 11 Maven WAR in the current folder.
 This application uses Spring MVC, not Spring Boot. Recommend a
 compatible JDK, Spring Framework, Spring Security, Hibernate, JSP/Servlet
 container, and H2 combination. Preserve WAR packaging, routes, form
@@ -164,6 +243,8 @@ login, CSRF protection, moderation, and persistent data. Keep execution
 local; do not introduce Spring Boot, add Azure services, or deploy.
 Stop after planning; do not change application code or install tools
 until I approve the target and plan.
+'@
+modernize plan create $goal --plan-name $planName --language java --assess-file-path $assessmentReport --delegate local
 ```
 
 Review the generated plan before confirming execution:
@@ -177,13 +258,19 @@ Review the generated plan before confirming execution:
 
 ### 5. Execute the approved plan
 
-After reviewing and approving the plan, select **Execute modernization plan** and confirm execution. The agent runs the ordered tasks, applies code and dependency changes, validates builds, scans for and addresses CVEs, and creates commits.
+**Only after reviewing and approving the plan**, run this command in the same terminal and application folder. `$planName` is the application-specific name set in step 4:
+
+```powershell
+modernize plan execute --plan-name $planName --delegate local
+```
+
+If you opened a new terminal, first return to the selected application folder and set `$planName` to `dotnet-blog-upgrade` or `java-blog-upgrade`. The agent runs the ordered tasks, applies code and dependency changes, validates builds, scans for and addresses CVEs, and creates commits.
 
 Monitor progress and inspect the resulting changes. Because execution can change code and commit it, use the dedicated branch and disposable database copy established earlier. Do not execute a plan that still contains unapproved deployment or infrastructure tasks.
 
 ### 6. Validate and review the results
 
-The agent's build and dependency checks do not replace the application's behavioral and persistence checks.
+The agent's build and dependency checks do not replace the application's behavioral and persistence checks. Return to the repository root with `Set-Location ..` if you are still in the selected application folder.
 
 For both applications:
 

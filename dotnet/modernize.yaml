@@ -1,0 +1,6 @@
+analysisCoverage: full
+dotnet:
+  assessmentDomains:
+    - cloud-readiness
+    - framework-upgrade
+  targetRuntime: net10.0
