@@ -16,7 +16,7 @@ The [development container](.devcontainer/devcontainer.json) provides **Moderniz
 
 Wait for setup to finish, then follow the CLI workflow below in the default PowerShell terminal. Setup does **not** authenticate, assess, execute plans, launch the apps, or expose application ports automatically.
 
-**Optional local demo:** the current .NET 10 working application runs with a seeded SQLite file, including in Codespaces; Java already uses local H2. First startup still requires your administrator credentials. The original Framework/MSBuild, IIS Express, and LocalDB baseline remains Windows-only. Preinstalled JDK 27 is a toolchain option, not an approved application upgrade. See [Codespaces authentication, validation, and limitations](docs/MODERNIZATION.md#using-github-codespaces) before starting.
+**Optional local demo:** the .NET application intentionally targets **.NET Framework 4.7.2** with MVC 5, EF6, IIS Express, and LocalDB, and requires **Windows**. Codespaces can be used for assessment/planning, but cannot host this legacy .NET baseline. Java uses local H2. Both seed demo content and require administrator credentials on first startup. Preinstalled .NET 10 and JDK 27 are toolchain options, not approved application upgrades. See [Codespaces authentication, validation, and limitations](docs/MODERNIZATION.md#using-github-codespaces) before starting.
 
 ## Modernize an application
 
@@ -35,7 +35,7 @@ Set-Location java
 modernize assess --format markdown --delegate local
 ```
 
-For .NET, use `Set-Location dotnet` instead. The current .NET 10/SQLite demo is portable; original Framework build/runtime validation requires **Windows**. Keep the same terminal and application folder through planning and execution.
+For .NET, use `Set-Location dotnet` instead. The Framework 4.7.2 build/runtime baseline requires **Windows**. Keep the same terminal and application folder through planning and execution.
 
 If GitHub CLI is not authenticated locally, run `gh auth login`. In Codespaces, repository access is usually already configured, but the automatic token is not a Copilot credential: follow the [Codespaces authentication steps](docs/MODERNIZATION.md#using-github-codespaces).
 
@@ -81,9 +81,7 @@ Choose **one** sample prompt below for your application. These prompts request a
 $goal = @'
 Plan modernization of only LegacyBlog.sln in the current folder.
 Compare an in-place .NET Framework upgrade with migration to a supported
-.NET LTS and ASP.NET Core MVC for the original Framework baseline.
-If already on .NET 10/ASP.NET Core, retain the current checkpoint and
-plan remaining work rather than repeating conversion.
+.NET LTS and ASP.NET Core MVC from the Framework 4.7.2 baseline.
 Explain System.Web, OWIN, Razor, EF6,
 LocalDB, and ASP.NET Identity password-hash compatibility.
 Preserve routes, authorization, antiforgery protection, persistent data,
@@ -155,7 +153,7 @@ Two independent blogs with equivalent publishing, authentication, and comment-mo
 | Present the CLI workflow | [14-slide HTML presentation](docs/presentation.html), viewable offline with PDF printing |
 | Understand YAML fields and CLI options | [Assessment configuration](docs/MODERNIZATION.md#optional-assessment-configuration) |
 | Optionally prepare a local validation environment | [.NET setup](dotnet/README.md) or [Java setup](java/README.md), linked as step 1 of each modernization workflow |
-| Use local databases with demo data | [.NET SQLite defaults and SQL Server options](dotnet/README.md#storage-and-configuration) or [Java H2 defaults](java/README.md#configuration-and-data-lifecycle); both seed categories, posts, drafts, and comments on first startup |
+| Use local databases with demo data | [.NET LocalDB configuration](dotnet/README.md#storage-and-configuration) or [Java H2 defaults](java/README.md#configuration-and-data-lifecycle); both seed categories, posts, drafts, and comments on first startup |
 | Check behavior and restart persistence | [Required regression checks](docs/MODERNIZATION.md#required-regression-checks) |
 | Review what has actually been tested | [Verification status](docs/MODERNIZATION.md#verification-status); paid assessments and hosted CI remain unverified |
 | Practice isolated source-only security review | [Training boundaries](docs/MODERNIZATION.md#intentional-security-exercises-source-only); do not wire the fixtures into the apps |

@@ -10,11 +10,11 @@ $PSNativeCommandUseErrorActionPreference = $false
 $root = Split-Path $PSScriptRoot -Parent
 $temporary = Join-Path ([IO.Path]::GetTempPath()) ('blog-baseline-' + [guid]::NewGuid().ToString('N'))
 $id = [guid]::NewGuid().ToString('N')
-$state = @{ Process = $null; Container = ''; Volume = ''; Starts = 0 }
+$state = @{ Process = $null; Container = ''; Volume = ''; Starts = 0; LocalDbCreated = $false }
+$instance = "BlogBaseline_$id"
 $username = "baseline-$($id.Substring(0, 12))"
 $password = [guid]::NewGuid().ToString('N')
-$sqlEnvironmentNames = @('BLOG_DOTNET_CONNECTION_STRING', 'ConnectionStrings__Blog', 'SQLCONNSTR_Blog', 'SQLAZURECONNSTR_Blog', 'CUSTOMCONNSTR_Blog', 'MYSQLCONNSTR_Blog')
-$environmentNames = @('BLOG_ADMIN_USER', 'BLOG_ADMIN_PASSWORD', 'BLOG_DOTNET_DB_PATH', 'BLOG_JAVA_DB_PATH') + $sqlEnvironmentNames
+$environmentNames = @('BLOG_ADMIN_USER', 'BLOG_ADMIN_PASSWORD', 'BLOG_DOTNET_CONNECTION_STRING', 'BLOG_JAVA_DB_PATH')
 $savedEnvironment = @{}
 foreach ($name in $environmentNames) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name) }
 $success = $false
@@ -23,7 +23,8 @@ $listener.Start()
 $port = $listener.LocalEndpoint.Port
 $listener.Stop()
 $baseUrl = "http://localhost:$port"
-$assemblyPath = ''
+$sqlLocalDb = $null
+$iis = $null
 
 function Invoke-Checked([string]$Command, [string[]]$Arguments) {
     & $Command @Arguments
@@ -55,10 +56,9 @@ function Start-BaselineServer {
     try {
         if ($App -eq 'DotNet') {
             $site = Join-Path $root 'dotnet/LegacyBlog'
-            $state.Process = Start-Process -FilePath (Get-Command dotnet -ErrorAction Stop).Source `
-                -ArgumentList "`"$assemblyPath`" --urls $baseUrl --contentRoot `"$temporary`"" -WorkingDirectory $site -PassThru `
-                -RedirectStandardOutput (Join-Path $temporary "dotnet-$($state.Starts).out.log") `
-                -RedirectStandardError (Join-Path $temporary "dotnet-$($state.Starts).err.log")
+            $state.Process = Start-Process -FilePath $iis -ArgumentList "/path:`"$site`" /port:$port /systray:false" -PassThru `
+                -RedirectStandardOutput (Join-Path $temporary "iis-$($state.Starts).out.log") `
+                -RedirectStandardError (Join-Path $temporary "iis-$($state.Starts).err.log")
         } else {
             $war = Join-Path $root 'java/target/ROOT.war'
             $container = & docker run --detach --name "blog-baseline-$id" -p "127.0.0.1:${port}:8080" `
@@ -80,7 +80,7 @@ function Start-BaselineServer {
     $lastResult = 'No HTTP response'
     try {
         while ([DateTime]::UtcNow -lt $deadline) {
-            if ($state.Process -and $state.Process.HasExited) { throw 'The application process exited before becoming ready.' }
+            if ($state.Process -and $state.Process.HasExited) { throw 'IIS Express exited before the application became ready.' }
             try {
                 $response = $client.GetAsync("$baseUrl/").GetAwaiter().GetResult()
                 try {
@@ -106,22 +106,37 @@ try {
     Push-Location $root
     try {
         if ($App -eq 'DotNet') {
-            $solution = Join-Path $root 'dotnet/LegacyBlog.sln'
-            $project = Join-Path $root 'dotnet/LegacyBlog/LegacyBlog.csproj'
-            if ($Restore) { Invoke-Checked dotnet @('restore', $solution) }
-            Invoke-Checked dotnet @('build', $solution, '--configuration', 'Release', '--no-restore', '--nologo')
-            Invoke-Checked dotnet @('test', (Join-Path $root 'dotnet/LegacyBlog.Tests/LegacyBlog.Tests.csproj'), '--configuration', 'Release', '--no-build', '--no-restore', '--nologo')
-            $assemblyPath = (& dotnet msbuild $project '-getProperty:TargetPath' '-p:Configuration=Release' '-nologo' | Out-String).Trim()
-            if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $assemblyPath -PathType Leaf)) {
-                throw 'Could not locate the built .NET application assembly.'
+            if (!$IsWindows) { throw 'The .NET Framework baseline requires Windows.' }
+            [xml]$project = Get-Content -LiteralPath (Join-Path $root 'dotnet\LegacyBlog\LegacyBlog.csproj') -Raw
+            if ($project.Project.Sdk -or ($project.Project.PropertyGroup.TargetFrameworkVersion -join '') -ne 'v4.7.2') {
+                throw 'The demo must remain a non-SDK .NET Framework 4.7.2 application. Modernize it on a separate exercise branch.'
             }
-            $assembly = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($assemblyPath))
+            [xml]$webConfig = Get-Content -LiteralPath (Join-Path $root 'dotnet\LegacyBlog\Web.config') -Raw
+            if ($webConfig.configuration.'system.web'.compilation.targetFramework -ne '4.7.2' -or
+                $webConfig.configuration.'system.web'.httpRuntime.targetFramework -ne '4.7.2') {
+                throw 'ASP.NET compilation and HTTP runtime must target .NET Framework 4.7.2.'
+            }
+            $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+            $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+            if (!$msbuild) { throw 'Full Framework MSBuild is required.' }
+            $arguments = @((Join-Path $root 'dotnet/LegacyBlog.sln'), '/p:Configuration=Release', '/v:minimal', '/nologo')
+            if ($Restore) { $arguments += @('/restore', '/p:RestorePackagesConfig=true') }
+            Invoke-Checked $msbuild $arguments
+            $assembly = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Join-Path $root 'dotnet/LegacyBlog/bin/LegacyBlog.dll')))
+            if (!$assembly.Contains('.NETFramework,Version=v4.7.2')) { throw 'The built demo assembly must target .NET Framework 4.7.2.' }
             if ($assembly.Contains('LegacyBlog.TrainingOnly')) { throw 'The .NET build contains intentionally vulnerable training code.' }
-            Copy-Item -LiteralPath (Join-Path $root 'dotnet/LegacyBlog/Content') -Destination (Join-Path $temporary 'Content') -Recurse
-            foreach ($name in $sqlEnvironmentNames) {
-                if (Test-Path "Env:\$name") { Remove-Item "Env:\$name" }
+            $iis = Join-Path $env:ProgramFiles 'IIS Express/iisexpress.exe'
+            if (!(Test-Path -LiteralPath $iis)) { throw 'IIS Express is required.' }
+            $sqlLocalDb = (Get-Command SqlLocalDB -ErrorAction SilentlyContinue).Source
+            if (!$sqlLocalDb) {
+                $sqlLocalDb = Get-ChildItem -Path (Join-Path $env:ProgramFiles 'Microsoft SQL Server/*/Tools/Binn/SqlLocalDB.exe') |
+                    Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
             }
-            $env:BLOG_DOTNET_DB_PATH = Join-Path $temporary 'blog.db'
+            if (!$sqlLocalDb) { throw 'SQL Server Express LocalDB is required.' }
+            Invoke-Checked $sqlLocalDb @('create', $instance, '-s')
+            $state.LocalDbCreated = $true
+            $databaseFile = Join-Path $temporary 'baseline.mdf'
+            $env:BLOG_DOTNET_CONNECTION_STRING = "Data Source=(LocalDB)\$instance;Initial Catalog=BlogBaseline;AttachDbFilename=$databaseFile;Integrated Security=True;MultipleActiveResultSets=True"
         } else {
             Invoke-Checked mvn @('-B', '-ntp', '-f', (Join-Path $root 'java/pom.xml'), 'package')
             $archive = [IO.Compression.ZipFile]::OpenRead((Join-Path $root 'java/target/ROOT.war'))
@@ -150,14 +165,12 @@ try {
         }
         Stop-BaselineServer
         if ($state.Volume) { Invoke-Checked docker @('volume', 'rm', $state.Volume) }
+        if ($state.LocalDbCreated) {
+            Invoke-Checked $sqlLocalDb @('stop', $instance, '-k')
+            Invoke-Checked $sqlLocalDb @('delete', $instance)
+        }
         if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Recurse -Force }
     } finally {
-        foreach ($name in $environmentNames) {
-            if ($null -eq $savedEnvironment[$name]) {
-                if (Test-Path "Env:\$name") { Remove-Item "Env:\$name" }
-            } else {
-                [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name])
-            }
-        }
+        foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name]) }
     }
 }

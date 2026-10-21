@@ -1,10 +1,10 @@
 @model PostDetail
-<article class="story"><div class="meta"><a href="/categories/@Model.Post.Category.Slug">@Model.Post.Category.Name</a> / <time datetime="@(Model.Post.PublishedAt.GetValueOrDefault().ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture))Z">@Model.Post.PublishedAt.GetValueOrDefault().ToString("yyyy-MM-dd HH:mm") UTC</time></div>
+<article class="story"><div class="meta"><a href="/categories/@Model.Post.Category.Slug">@Model.Post.Category.Name</a> / <time datetime="@(Model.Post.PublishedAt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture))Z">@Model.Post.PublishedAt.Value.ToString("yyyy-MM-dd HH:mm") UTC</time></div>
 <h1>@Model.Post.Title</h1><div class="prose">@Model.Post.Body</div></article>
 <section class="comments"><h2>Conversation</h2>
 @foreach (var comment in Model.Comments) { <article class="card comment"><strong>@comment.Author</strong><p class="prose">@comment.Body</p></article> }
 @if (Model.Comments.Count == 0) { <p>No approved comments yet.</p> }
-@if (Context.Request.Query["submitted"] == "1") { <p class="notice">Your comment is awaiting approval.</p> }
+@if (Request.QueryString["submitted"] == "1") { <p class="notice">Your comment is awaiting approval.</p> }
 <h3>Leave a comment</h3><p>Comments appear after administrator approval.</p>
 <form class="editor" method="post" action="/posts/@Model.Post.Slug/comments">@Html.AntiForgeryToken()@Html.ValidationSummary(false)
 <label for="Author">Name</label>@Html.TextBox("Author", Model.Form.Author, new { maxlength = 100, required = "required" })

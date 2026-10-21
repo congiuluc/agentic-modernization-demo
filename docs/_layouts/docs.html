@@ -112,15 +112,29 @@
       {% if page.page_key == 'home' %}
       <div class="workspace-card" aria-label="Repository at a glance">
         <div class="workspace-heading"><span class="workspace-mark" aria-hidden="true"></span> YOUR MODERNIZATION WORKSPACE <code>01</code></div>
-        <div class="stack-card"><span class="stack-symbol">.NET</span><div><strong>.NET 10 working copy</strong><p>ASP.NET Core &middot; EF Core &middot; SQLite</p></div><span class="platform-tag">Local file</span></div>
+        <div class="stack-card"><span class="stack-symbol">.NET</span><div><strong>.NET Framework 4.7.2</strong><p>MVC 5 &middot; EF6 &middot; LocalDB</p></div><span class="platform-tag">Windows</span></div>
         <div class="stack-card"><span class="stack-symbol">JAVA</span><div><strong>Java 11</strong><p>Spring MVC &middot; Hibernate &middot; Tomcat</p></div><span class="platform-tag">WAR</span></div>
         <div class="workspace-flow"><span>Assess</span><span aria-hidden="true">&rarr;</span><span>Plan</span><span aria-hidden="true">&rarr;</span><strong>Execute</strong></div>
         <p class="workspace-caption">One application at a time. Human approval at every decision boundary.</p>
       </div>
       {% endif %}
     </section>
+    {% if page.page_key == 'home' %}
+    <nav class="reading-paths" aria-label="Choose a reading path">
+      <a href="{{ '/dotnet/' | relative_url }}"><span class="eyebrow">Application walkthrough</span><strong>Modernize .NET <span aria-hidden="true">&rarr;</span></strong><span>Start from Framework 4.7.2 and follow one focused exercise.</span></a>
+      <a href="{{ '/java/' | relative_url }}"><span class="eyebrow">Application walkthrough</span><strong>Modernize Java <span aria-hidden="true">&rarr;</span></strong><span>Start from Java 11 and follow one focused exercise.</span></a>
+      <a href="#modernization-workflow"><span class="eyebrow">Shared playbook</span><strong>Follow the workflow <span aria-hidden="true">&darr;</span></strong><span>Six steps, with configuration and automation when you need them.</span></a>
+    </nav>
+    {% endif %}
     <div class="document-layout">
-      <article class="docs-body" id="document" tabindex="-1" aria-label="{{ page.title | escape }}">
+      <article class="docs-body" id="document" tabindex="-1" aria-label="{{ page.title | escape }}"{% if page.page_key == 'home' %} data-guide-reader{% endif %}>
+        {% if page.page_key == 'home' %}
+        <div class="reader-tools ui-only" role="group" aria-label="Field guide reading controls">
+          <p>Read one chapter at a time. Open any heading for the full details.</p>
+          <button class="reader-button" id="reader-expand" type="button">Expand all</button>
+          <button class="reader-button" id="reader-reset" type="button">Reading view</button>
+        </div>
+        {% endif %}
         {{ content | replace: '<table>', '<div class="table-scroll" role="region" aria-label="Reference table" tabindex="0"><table>' | replace: '</table>', '</table></div>' }}
       </article>
       <aside class="contents-panel" aria-label="Guide navigation">

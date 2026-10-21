@@ -2,6 +2,76 @@
   document.documentElement.classList.add("js");
   const themeButton = document.getElementById("theme-toggle");
   const status = document.getElementById("ui-status");
+  const guide = document.querySelector("[data-guide-reader]");
+  const chapters = [];
+  const steps = [];
+
+  function wrapChapter(heading, boundary, className) {
+    const panel = document.createElement("details");
+    panel.className = className;
+    const summary = document.createElement("summary");
+    const body = document.createElement("div");
+    body.className = "chapter-content";
+    heading.before(panel);
+    let next = heading.nextSibling;
+    summary.appendChild(heading);
+    panel.append(summary, body);
+    while (next && !boundary(next)) {
+      const following = next.nextSibling;
+      body.appendChild(next);
+      next = following;
+    }
+    return panel;
+  }
+
+  function readingView() {
+    guide.querySelectorAll("details").forEach(panel => { panel.open = false; });
+    chapters.forEach(chapter => { chapter.open = chapter.querySelector("h2").id === "modernization-workflow"; });
+    steps.forEach((step, index) => { step.open = index === 0; });
+  }
+
+  function revealSection(hash, scroll) {
+    const target = document.getElementById(hash.substring(1));
+    if (!target || !guide?.contains(target)) return;
+    for (let ancestor = target.parentElement; ancestor && ancestor !== guide; ancestor = ancestor.parentElement) {
+      if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+    }
+    target.tabIndex = -1;
+    target.focus({ preventScroll: true });
+    if (scroll) target.scrollIntoView({ block: "start" });
+  }
+
+  if (guide) {
+    [...guide.children].filter(node => node.matches("h2[id]")).forEach(heading => {
+      chapters.push(wrapChapter(heading, node => node.nodeName === "H2", "guide-chapter"));
+    });
+    const workflow = document.getElementById("modernization-workflow").closest("details");
+    const isStep = node => node.nodeName === "H3" && /^\d+\.\s/.test(node.textContent);
+    [...workflow.querySelector(".chapter-content").children].filter(isStep).forEach(heading => {
+      steps.push(wrapChapter(heading, isStep, "workflow-step"));
+    });
+    readingView();
+    document.getElementById("reader-expand").addEventListener("click", () => {
+      guide.querySelectorAll("details").forEach(panel => { panel.open = true; });
+      status.textContent = "All field guide chapters and workflow steps expanded.";
+    });
+    document.getElementById("reader-reset").addEventListener("click", () => {
+      readingView();
+      const url = new URL(location.href);
+      url.hash = "modernization-workflow";
+      history.replaceState(null, "", url);
+      status.textContent = "Reading view restored. The workflow and its first step are open.";
+    });
+    document.addEventListener("click", event => {
+      const link = event.target.closest("a[href]");
+      if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const url = new URL(link.href, location.href);
+      if (url.origin === location.origin && url.pathname === location.pathname && url.hash) {
+        revealSection(url.hash, false);
+      }
+    });
+    window.addEventListener("hashchange", () => { revealSection(location.hash, true); });
+  }
 
   function syncTheme() {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -25,13 +95,20 @@
     syncTheme();
   });
   let printTheme;
+  let printPanels;
   window.addEventListener("beforeprint", () => {
     printTheme = document.documentElement.dataset.theme;
     document.documentElement.dataset.theme = "light";
+    if (guide && !printPanels) {
+      printPanels = [...guide.querySelectorAll("details")].map(panel => [panel, panel.open]);
+      printPanels.forEach(([panel]) => { panel.open = true; });
+    }
   });
   window.addEventListener("afterprint", () => {
     if (printTheme) document.documentElement.dataset.theme = printTheme;
     printTheme = undefined;
+    if (printPanels) printPanels.forEach(([panel, open]) => { panel.open = open; });
+    printPanels = undefined;
   });
   syncTheme();
 
@@ -97,4 +174,5 @@
     });
     wrapper.appendChild(button);
   });
+  if (location.hash) revealSection(location.hash, true);
 })();

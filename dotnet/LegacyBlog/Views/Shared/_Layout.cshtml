@@ -3,10 +3,10 @@
 <title>Fieldnotes | Legacy Blog</title><link rel="stylesheet" href="@Url.Content("~/Content/site.css")" /></head><body>
 <header class="site-header"><a class="brand" href="/">Fieldnotes<span>THE ENGINEERING JOURNAL</span></a>
 <nav aria-label="Main navigation"><a href="/">Journal</a>
-@if (User.Identity?.IsAuthenticated == true) {
+@if (User.Identity.IsAuthenticated) {
     <a href="/admin">Admin</a>
     <form class="inline" method="post" action="/account/logout">@Html.AntiForgeryToken()<button class="link" type="submit">Sign out</button></form>
 } else { <a href="/account/login">Sign in</a> }
-</nav></header><main><div class="eyebrow">.NET 10 / ASP.NET Core MVC</div>
+</nav></header><main><div class="eyebrow">.NET FRAMEWORK 4.7.2 / ASP.NET MVC 5</div>
 @RenderBody()
 </main><footer>Fieldnotes &mdash; A traditional blog, built to be modernized.</footer></body></html>

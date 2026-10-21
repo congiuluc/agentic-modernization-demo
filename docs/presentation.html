@@ -305,7 +305,7 @@
       <h2 id="title-3">Two stacks. One behavior contract.</h2>
       <p class="lead">Independent blog engines with equivalent publishing, authentication, and moderation workflows.</p>
       <div class="grid">
-        <div class="card"><span class="tag accent">dotnet/</span><h3>.NET 10 working copy</h3><ul><li>Original baseline: .NET Framework 4.7.2 / MVC 5.</li><li>Now ASP.NET Core / EF Core with local SQLite.</li><li>SQL Server remains an explicit option.</li></ul><p class="small"><strong>Portable local demo.</strong> Original Framework or LocalDB checks still require Windows.</p></div>
+        <div class="card"><span class="tag accent">dotnet/</span><h3>.NET Framework 4.7.2</h3><ul><li>Classic ASP.NET MVC 5 / Razor.</li><li>EF6, ASP.NET Identity, and OWIN.</li><li>Non-SDK project and persistent LocalDB.</li></ul><p class="small"><strong>Intentionally legacy.</strong> Build and run on Windows with Framework MSBuild and IIS Express.</p></div>
         <div class="card"><span class="tag accent">java/</span><h3>Spring MVC 5</h3><ul><li>Java 11, Spring Security 5, Hibernate 5.</li><li>JSP views and persistent file-based H2.</li><li>Maven WAR deployed to Tomcat 9.</li></ul><p class="small"><strong>Not Spring Boot.</strong> Do not introduce it implicitly.</p></div>
       </div>
       <p class="note">Preserve public routes, drafts, pagination, admin CRUD, CSRF protection, comment approval, original logins, and persistent data.</p>
@@ -392,7 +392,7 @@ $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, 
       <p class="lead">After approval, execute in the same terminal and application folder. Inspect all branch changes, then return to the repository root and rerun regression checks.</p>
       <pre><code>modernize plan execute --plan-name $planName --delegate local</code></pre>
       <div class="grid three">
-        <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and Kestrel / SQLite restart persistence.</p></div>
+        <div class="card"><span class="metric">66</span><h3>.NET assertions</h3><p>HTTP forms, publication timestamps, comment deletion, and IIS Express / LocalDB restart persistence.</p></div>
         <div class="card"><span class="metric">67</span><h3>Java assertions</h3><p>Actual Java 11 / Tomcat 9, JSP rendering, correct 405 responses, and container-replacement persistence.</p></div>
         <div class="card"><span class="metric">31</span><h3>Wrapper checks</h3><p>Offline checks on Windows and Linux, including explicit errors and rejection of linked assessment inputs.</p></div>
       </div>

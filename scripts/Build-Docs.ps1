@@ -32,7 +32,7 @@ $metadata = @{
     'docs/MODERNIZATION.md' = @{ Title = 'Modernization field guide'; Key = 'home'; Section = 'The field guide'; Action = 'Start the workflow'; Description = 'A hands-on guide to assess, plan, and modernize legacy .NET and Java applications with the GitHub Copilot modernization agent.' }
     'docs/DOTNET-MODERNIZATION.md' = @{ Title = '.NET modernization'; Key = 'dotnet'; Section = 'Application modernization'; Action = 'Start modernization'; Description = 'Assess, plan, approve, execute, and validate the .NET blog modernization with Modernize CLI. Legacy setup is an optional first step.' }
     'docs/JAVA-MODERNIZATION.md' = @{ Title = 'Java modernization'; Key = 'java'; Section = 'Application modernization'; Action = 'Start modernization'; Description = 'Assess, plan, approve, execute, and validate the Java blog modernization with Modernize CLI. Legacy setup is an optional first step.' }
-    'dotnet/README.md' = @{ Title = '.NET local setup'; Key = 'dotnet-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Run the .NET 10 working application with a seeded, persistent local SQLite database. SQL Server remains an explicit option.' }
+    'dotnet/README.md' = @{ Title = '.NET local setup'; Key = 'dotnet-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build and run the .NET Framework 4.7.2 legacy baseline on Windows with MVC 5, EF6, IIS Express, and seeded LocalDB data.' }
     'java/README.md' = @{ Title = 'Java application setup'; Key = 'java-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build, run, and verify the Java 11 Spring MVC baseline with Maven, Tomcat 9, and persistent H2 storage.' }
 }
 

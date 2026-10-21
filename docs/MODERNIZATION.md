@@ -31,7 +31,7 @@ Choose your path through the repository:
 
 > **Practice workspace, not a completed migration.** The [verification status](#verification-status) records what has actually been checked. Runtime upgrades come first; Azure migration and deployment are optional, separately approved work.
 
-The applications are independent, feature-equivalent blogs. The .NET exercise started with MVC 5 on .NET Framework 4.7.2; its current working copy is .NET 10/ASP.NET Core with a seeded SQLite default and an explicit SQL Server option. Java remains Spring MVC on Java 11 with file-based H2. The workflow uses the **Modernize CLI**, not the IDE extension's chat commands. This field guide, the application-specific modernization workflows, and the linked optional setup guides are also published through [GitHub Pages](#documentation-website-github-pages).
+The applications are independent, feature-equivalent legacy blogs. The .NET application intentionally targets .NET Framework 4.7.2 with MVC 5, EF6, OWIN, and LocalDB. Java remains Spring MVC on Java 11 with file-based H2. Neither application is already modernized; perform upgrades on a separate exercise branch after plan approval. The workflow uses the **Modernize CLI**, not the IDE extension's chat commands. This field guide, the application-specific modernization workflows, and the linked optional setup guides are also published through [GitHub Pages](#documentation-website-github-pages).
 
 <details>
 <summary><strong>Presenting this repository</strong></summary>
@@ -50,7 +50,7 @@ The applications are independent, feature-equivalent blogs. The .NET exercise st
 
 VS Code is optional for reviewing and editing the generated plan; its modernization extension is not required for this CLI workflow. Use the current [agent quickstart](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/quickstart) for installation and the [CLI reference](https://learn.microsoft.com/en-us/azure/developer/github-copilot-app-modernization/modernization-agent/cli-commands) for command options. Cloud assessment or deployment steps can have additional prerequisites; do not provision Azure resources as part of the local upgrade exercise.
 
-**Platform boundary:** the Modernize CLI and current .NET 10/SQLite working application support Windows, Linux, and macOS. The original Framework/MSBuild/IIS Express baseline and an explicitly selected SQL Server LocalDB database still require **Windows**. Java builds and hosting can use the appropriate JDK, Maven, and servlet container on any supported OS.
+**Platform boundary:** the Modernize CLI supports Windows, Linux, and macOS. The .NET Framework 4.7.2 application requires **Windows** for Framework MSBuild, IIS Express, and LocalDB. Java builds and hosting can use the appropriate JDK, Maven, and servlet container on any supported OS.
 
 **Shell conventions:** shared `sh` command blocks below use commands that also work in Windows PowerShell. Run `powershell` blocks in PowerShell 7 on any OS, except the Windows-only installer. Run `bash` blocks in Bash/Zsh on Linux/macOS. Choose an application from the repository root, then keep the same PowerShell 7 terminal and application folder for assessment, planning, and execution. Return to the repository root for regression checks.
 
@@ -85,7 +85,7 @@ pwsh -File .\scripts\Test-ApplicationBaseline.ps1 -App Java
 
 The runner builds the WAR with the selected build JDK and its existing `--release 11` setting, then starts a disposable Java 11/Tomcat 9 container and database volume, checks HTTP behavior and restart persistence, and cleans up. JDK 27 is the default build JDK in Codespaces; select the installed JDK 11 through SDKMAN or `JAVA_HOME` if recording an exact Java 11 build baseline. Neither cross-compilation nor the Java 11 container proves JDK 27 runtime compatibility. Run `docker info` first if Docker is unavailable and inspect the container setup logs; do not count an unexecuted check as passing. Use the approved target toolchain and adapted validation commands after modernization.
 
-**Local data and Windows boundary:** the current .NET 10 app runs in Codespaces with a persistent SQLite file and seeded demo data; Java already uses a local H2 file. Set administrator credentials before first startup. Codespaces uses Linux even when your own computer runs Windows, so original Framework/MSBuild/IIS Express or LocalDB checks still require Windows. A fresh local demo database does not prove migration of existing SQL Server/H2 data.
+**Local data and Windows boundary:** Codespaces supports .NET source assessment/planning, not hosting the Framework 4.7.2 baseline. Its .NET 10 SDK is target/assessment tooling and does not retarget the application. Run the .NET demo on Windows with IIS Express and persistent LocalDB; Java uses a local H2 file. Both seed demo content and require administrator credentials on first startup. A fresh database does not prove migration of existing SQL Server/H2 data.
 
 No application ports are automatically forwarded. Keep any manually forwarded test ports private; never publish these legacy samples. Codespaces compute/storage and Copilot requests have separate quotas or charges. Commit intended source/documentation changes before deleting a Codespace, but keep tokens, databases, reports, and build artifacts out of commits.
 
@@ -93,11 +93,9 @@ No application ports are automatically forwarded. Keep any manually forwarded te
 
 **The short version:** establish a baseline, then run these three CLI commands for one application. No interactive menu navigation is required.
 
-| Stage | Command | Before continuing |
-| --- | --- | --- |
-| Assess | `modernize assess` | Read the generated report. |
-| Plan | `modernize plan create "<goal>" --assess-file-path "<report-file>" --plan-name blog-upgrade` | Review and approve the generated plan. |
-| Execute | `modernize plan execute --plan-name blog-upgrade --delegate local` | Rerun regression and restart/persistence checks. |
+1. **Assess:** run `modernize assess`, then read the generated report.
+2. **Plan:** run `modernize plan create "<goal>" --assess-file-path "<report-file>" --plan-name blog-upgrade`, then review and approve the generated plan.
+3. **Execute:** run `modernize plan execute --plan-name blog-upgrade --delegate local`, then rerun regression and restart/persistence checks.
 
 The steps below provide copy-and-paste commands with application-specific goals and the assessment report as planning input. Run execution separately, only after approval; do not replace these stages with `modernize upgrade`, which combines planning and execution.
 
@@ -144,7 +142,7 @@ Follow your organization's software-installation and GitHub authentication polic
 
 From the repository root, choose **one** application. Copy only the matching block into PowerShell 7.
 
-**.NET (current working copy: Windows, Linux, or macOS):**
+**.NET (Windows for the build/runtime baseline; other platforms for source assessment with tooling limitations):**
 
 ```powershell
 Set-Location dotnet
@@ -270,16 +268,14 @@ The plan must specify target versions, ordered tasks, compatibility decisions, d
 
 #### .NET planning goal
 
-The [dotnet](../dotnet) application contains [LegacyBlog.sln](../dotnet/LegacyBlog.sln). The original migration baseline was ASP.NET MVC 5/.NET Framework 4.7.2; the current working copy is already ASP.NET Core/.NET 10. Check the revision before choosing work. From the `dotnet` folder, run:
+The [dotnet](../dotnet) application contains [LegacyBlog.sln](../dotnet/LegacyBlog.sln), intentionally targeting ASP.NET MVC 5/.NET Framework 4.7.2. From the `dotnet` folder on a separate modernization branch, run:
 
 ```powershell
 $planName = "dotnet-blog-upgrade"
 $goal = @'
 Plan the modernization of only LegacyBlog.sln in the current folder. Compare an in-place
 .NET Framework upgrade with migration to a currently supported .NET LTS
-and ASP.NET Core MVC if working from the original Framework baseline.
-If the current checkout already uses .NET 10/ASP.NET Core, preserve that
-checkpoint and plan only remaining modernization work; do not repeat conversion.
+and ASP.NET Core MVC from the Framework 4.7.2 baseline.
 Recommend targets and explain compatibility, data,
 authentication, hosting, and testing risks. Preserve existing routes and
 behavior. Keep execution local; do not add Azure services or deploy.
@@ -381,7 +377,7 @@ Replace `APP_PATH` and `REPORT_DIRECTORY` with actual paths, quoting paths that 
 - Store it as the secret **`MODERNIZE_GH_TOKEN`** in the selected CI platform. The templates expose it only to the assessment step as `GH_TOKEN` and `COPILOT_GITHUB_TOKEN`. Do not put a token value in YAML or commit it.
 - The automatic GitHub Actions `GITHUB_TOKEN` and Azure DevOps `System.AccessToken` are **not** substitutes for a Copilot-enabled GitHub credential. Azure Repos checkouts still need GitHub authentication for Copilot.
 - Runners need PowerShell 7, GitHub CLI **2.45.0+**, and the application's assessment/build prerequisites. The templates select a .NET SDK or JDK as appropriate. The shared runner provisions the pinned **Modernize 1.0.76** release when that version is unavailable and verifies its archive against the release's SHA-256 checksums.
-- This repository's .NET assessment job uses a **Windows** runner, accommodating the original Framework baseline; Java uses **Linux**. The shared runner supports all three operating systems. The current .NET 10/SQLite application is portable, while original Framework or LocalDB checks still require Windows.
+- This repository's .NET assessment job uses a **Windows** runner for the Framework 4.7.2 baseline; Java uses **Linux**. The shared assessment runner supports all three operating systems, but Framework build/runtime and LocalDB checks require Windows.
 
 ### GitHub Actions
 
@@ -460,7 +456,7 @@ pwsh -File scripts/Test-ModernizationAssessment.ps1
 The credential-free [Validate repository workflow](../.github/workflows/validate.yml) runs on every pull request, on `main` pushes, and on manual dispatch. It does not need the Copilot token or the optional assessment opt-in variable.
 
 - Offline assessment-wrapper checks run on Windows, Linux, and macOS, including linked-input rejection.
-- The current .NET application builds/tests with .NET 10 and runs on Kestrel with an isolated SQLite file. The hosted job provisions the SDK on Windows; the local runner is cross-platform.
+- The .NET application builds with full Framework MSBuild on Windows and runs on IIS Express with an isolated LocalDB instance. The runner verifies the non-SDK project, ASP.NET configuration, and built assembly all target Framework 4.7.2, preventing an accidental pre-modernized demo.
 - The Java application builds on Linux with JDK 11 and runs in an isolated Java 11/Tomcat 9 container.
 - Both applications undergo form/HTTP tests, publication-timestamp checks, comment cascade-deletion checks, and a full restart against the same database without bootstrap credentials.
 - Both built artifacts are checked to ensure the intentionally vulnerable training examples are not shipped.
@@ -474,13 +470,13 @@ To run the baseline checks locally from the repository root:
 pwsh -File scripts/Test-ApplicationBaseline.ps1 -App Java
 ```
 
-Java requires Maven, a JDK, and a running Docker engine with Linux containers. The .NET runner requires the .NET 10 SDK and PowerShell 7, without IIS Express, Docker, or SQL Server:
+Java requires Maven, a JDK, and a running Docker engine with Linux containers. The .NET runner requires Windows, the Framework 4.7.2 targeting pack, full Framework MSBuild, IIS Express, SQL Server Express LocalDB, and PowerShell 7:
 
 ```powershell
 pwsh -File scripts/Test-ApplicationBaseline.ps1 -App DotNet
 ```
 
-Append `-Restore` to the .NET command when packages need restoring. The runner generates disposable credentials, uses an unused loopback port, and cleans up its own processes, Java container/volume, and temporary database files. The .NET run deliberately removes inherited SQL Server overrides within its process and uses a temporary SQLite path; original environment settings are restored afterward. It does not use the developer's blog database or existing administrator credentials.
+Append `-Restore` to the .NET command when packages need restoring. The runner generates disposable credentials, uses an unused loopback port, and cleans up its own processes, LocalDB instance, Java container/volume, and temporary database files. The .NET run overrides the connection string within its process to use its isolated LocalDB database; original environment settings are restored afterward. It does not use the developer's blog database or existing administrator credentials.
 
 ## Intentional security exercises (source-only)
 
@@ -519,15 +515,15 @@ Ignore rules do not untrack files already committed and do not delete local repo
 
 ## Sample applications
 
-The .NET working application has moved beyond its original Framework baseline; Java retains its older enterprise stack:
+Both applications deliberately retain their legacy enterprise stacks as modernization starting points:
 
 | | .NET | Java |
 |---|---|---|
-| Target | .NET 10 | Java 11 |
-| Web | ASP.NET Core MVC / Razor | Spring MVC 5 / JSP / Servlet 4 |
-| Data | EF Core / file-based SQLite by default; explicit SQL Server option | Hibernate 5 / file-based H2 |
-| Host | Kestrel; LocalDB only when explicitly selected on Windows | Tomcat 9 |
-| Build | SDK-style solution / dotnet CLI | Maven WAR |
+| Target | .NET Framework 4.7.2 | Java 11 |
+| Web | ASP.NET MVC 5 / Razor / System.Web / OWIN | Spring MVC 5 / JSP / Servlet 4 |
+| Data | EF6 / ASP.NET Identity / SQL Server LocalDB | Hibernate 5 / file-based H2 |
+| Host | IIS Express on Windows | Tomcat 9 |
+| Build | Non-SDK solution / Framework MSBuild / packages.config | Maven WAR |
 
 See [.NET setup](../dotnet/README.md) and [Java setup](../java/README.md). Both automatically seed two categories, twelve published posts, two drafts, and two comments on the first empty database. Administrator environment variables are required; no hardcoded login is provided.
 
@@ -560,7 +556,7 @@ Administrator mutation routes are linked from the corresponding HTML forms. Muta
 
 ### Smoke checks
 
-Start the application to test. The current .NET 10/SQLite application and Java server can run on supported Windows, Linux, or macOS environments. The original Framework host or explicit LocalDB configuration still requires Windows.
+Start the application to test. The .NET Framework 4.7.2 server requires Windows, IIS Express, and LocalDB. Java can run on supported Windows, Linux, or macOS environments. HTTP checks can run from another machine against an explicitly configured test endpoint.
 
 From the repository root, start PowerShell 7 using the same command in Windows PowerShell, Bash, or Zsh:
 
@@ -592,8 +588,7 @@ Bind the servers to loopback. Local HTTP cookies are intentionally usable withou
 
 ### Verification status
 
-- **Current .NET working copy:** .NET 10 Release build, **26 passing test cases**, and **66 passing HTTP/form/restart assertions** using Kestrel and disposable SQLite on Windows. The original login, seed identities, edits, comments, and timestamps survive a complete process restart without bootstrap credentials. Explicit SQL Server configuration is covered by provider-selection tests; live SQL Server integration was not executed in this run.
-- **Historical Framework baseline:** previously verified 4.7.2-targeted build/Framework 4.8.1 hosting and 66 HTTP/form/restart assertions using IIS Express/LocalDB. This is not a claim that the current SDK-style project still runs on that host.
+- **.NET legacy baseline:** restored the genuine non-SDK Framework 4.7.2/MVC 5/EF6 application. Release rebuild passed against the 4.7.2 reference assemblies, followed by **66 passing HTTP/form/restart assertions** using IIS Express and disposable LocalDB on Windows. Project, ASP.NET configuration, and built-assembly target guards passed. Original login, seed identities, edits, comments, and timestamps survived a complete process restart without bootstrap credentials. Framework uses the installed compatible in-place runtime, not a .NET 10 host.
 - **Java:** Maven WAR build using the installed JDK 21 with `--release 11`, followed by **67 passing HTTP/form/restart assertions** on actual **Java 11/Tomcat 9** in Docker, including JSP rendering.
 - **Automation:** **31 offline assessment-wrapper checks** pass on Windows and in a native Linux filesystem; CI also runs them on macOS. Built artifacts exclude the vulnerable training namespace/classes. The linked-path tests require a writable checkout.
 - **Not verified locally:** hosted GitHub Actions/Azure DevOps runs, a hosted Codespaces/container build, paid live assessments, and native macOS execution. These checks do not certify the intentionally legacy dependency lines as production-safe.
@@ -619,7 +614,9 @@ The [documentation build script](../scripts/Build-Docs.ps1) generates the site s
 
 Subsequent documentation changes pushed to `main` trigger publication automatically. Review the repository's Pages availability, site visibility, and environment protection settings before publishing; a private repository does not necessarily imply a private Pages site.
 
-The site uses a custom [documentation layout](_layouts/docs.html), [stylesheet](assets/site.css), and [progressive-enhancement script](assets/site.js). It includes a responsive navigation bar with a GitHub link to the repository's `main` branch, light/dark themes, an active table of contents, keyboard focus/skip links, and copy controls for code examples. The repository link follows the repository URL supplied to the build. The presentation shares the same visual language while keeping all its styles and scripts inside a single offline-capable file.
+The site uses a custom [documentation layout](_layouts/docs.html), [stylesheet](assets/site.css), and [progressive-enhancement script](assets/site.js). The field guide offers direct .NET/Java reading paths, collapsible chapters, and six individually expandable workflow steps. **Expand all** shows the complete guide; **Reading view** returns to the focused workflow. Section links automatically open their containing chapters, including links opened directly or through browser history. Without JavaScript, the full source remains readable; printing expands all details and restores the reading state afterward.
+
+Shared features include a responsive navigation bar with a GitHub link to the repository's `main` branch, light/dark themes, an active table of contents, keyboard focus/skip links, and copy controls for code examples. The repository link follows the repository URL supplied to the build. The presentation shares the same visual language while keeping all its styles and scripts inside a single offline-capable file.
 
 The site title and description are configured in [_config.yml](_config.yml). The build stages only the five maintained guides, the presentation, the layout/assets, and site configuration; application source, build outputs, databases, and modernization session state are not copied. The generated site source is recreated on every build to avoid retaining stale assets. Generated source and HTML are ignored by Git; authored layouts, assets, and the presentation remain tracked.
 
