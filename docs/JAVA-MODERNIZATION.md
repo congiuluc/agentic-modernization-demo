@@ -47,7 +47,7 @@ Keep this terminal in the `java` folder through execution. Review reports under 
 Select the report you reviewed, then generate a local plan:
 
 ```powershell
-Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+Get-ChildItem .\.github\modernize\assessment -Recurse -File -Filter index.html | Sort-Object LastWriteTime -Descending | Select-Object -ExpandProperty FullName
 $assessmentReport = Read-Host "Paste the full path of the assessment report file"
 $goal = @'
 Plan modernization of only the Java 11 Maven WAR in the current folder.

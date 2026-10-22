@@ -177,7 +177,7 @@ Reports use the CLI's default HTML format. Without `--delegate`, the agent runs 
 In the **same terminal and application folder**, list the generated files, then paste the full path of the report you reviewed when prompted. Choose the report for this application and this assessment run, not an older result or the output directory:
 
 ```powershell
-Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+Get-ChildItem .\.github\modernize\assessment -Recurse -File -Filter index.html | Sort-Object LastWriteTime -Descending | Select-Object -ExpandProperty FullName
 $assessmentReport = Read-Host "Paste the full path of the assessment report file"
 ```
 

@@ -49,7 +49,7 @@ On Linux/Codespaces, findings that require unavailable Framework tooling remain 
 Select the report you reviewed, then generate a local plan:
 
 ```powershell
-Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+Get-ChildItem .\.github\modernize\assessment -Recurse -File -Filter index.html | Sort-Object LastWriteTime -Descending | Select-Object -ExpandProperty FullName
 $assessmentReport = Read-Host "Paste the full path of the assessment report file"
 $goal = @'
 Plan modernization of only LegacyBlog.sln in the current folder.

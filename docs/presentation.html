@@ -374,7 +374,7 @@ dotnet:
   targetRuntime: net10.0</code></pre><p class="small"><code>full</code>: issues + codebase insights. Domains: selected scans. Runtime: comparison target, not upgrade approval. Java's <code>java/modernize.yaml</code> contains only <code>analysisCoverage: full</code>.</p></div>
         <div class="card"><h3>Full analysis command</h3><pre><code>modernize assess --source . --assess-config .\modernize.yaml --model auto</code></pre><p class="small">An alternative to the simple command, not an extra required run. Cloud readiness assesses Azure fit; it does not deploy.</p><p class="small">Reports: <code>.github/modernize/assessment/</code>. The guide explains fields, Java options, CLI flags, and CI configuration.</p></div>
       </div>
-      <pre><code>Get-ChildItem .\.github\modernize\assessment -Recurse -File | Select-Object -ExpandProperty FullName
+      <pre><code>Get-ChildItem .\.github\modernize\assessment -Recurse -File -Filter index.html | Sort-Object LastWriteTime -Descending | Select-Object -ExpandProperty FullName
 $assessmentReport = Read-Host "Paste the full path of the assessment report file"</code></pre>
       <p class="small">In the same PowerShell 7 terminal, paste the full path of the report you reviewed from this run, not the output directory or an older report. The next command passes this file into planning.</p>
     </section>
