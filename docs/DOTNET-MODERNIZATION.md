@@ -40,7 +40,7 @@ modernize assess --source . --model auto
 modernize assess --source . --assess-config .\modernize.yaml --model auto
 ```
 
-Keep this terminal in the `dotnet` folder through execution. Review reports under `.github/modernize/assessment/`. See the [assessment configuration](MODERNIZATION.md#optional-assessment-configuration) for field details. The YAML does not retarget the project or approve an upgrade.
+Keep this terminal in the `dotnet` folder through planning and execution. Reports are written under `.github/modernize/assessment/` as HTML by default; select the HTML report from this assessment run when planning. See the [assessment configuration](MODERNIZATION.md#optional-assessment-configuration) for field details. The YAML does not retarget the project or approve an upgrade.
 
 On Linux/Codespaces, findings that require unavailable Framework tooling remain unverified. Use Windows for the legacy build and runtime baseline.
 
@@ -54,7 +54,8 @@ $assessmentReport = Read-Host "Paste the full path of the assessment report file
 $goal = @'
 Plan modernization of only LegacyBlog.sln in the current folder.
 Compare an in-place .NET Framework upgrade with migration to .NET 10
-and ASP.NET Core MVC from the Framework 4.7.2 baseline.
+and ASP.NET Core MVC from the Framework 4.7.2 baseline. Treat net10.0
+as the configured assessment comparison target, not prior approval.
 Explain System.Web, OWIN, Razor, project-format,
 EF6, LocalDB, and ASP.NET Identity password-hash compatibility.
 Preserve routes, authorization, antiforgery protection, validation,
@@ -108,7 +109,13 @@ For the Framework baseline or a retained Framework target, use the Windows/MSBui
 
 #### Start the upgraded application
 
-1. In a separate terminal, select a disposable SQL Server/LocalDB database copy with `BLOG_DOTNET_CONNECTION_STRING`. If the approved migration changes configuration or provider, follow that plan's explicit data-conversion and configuration steps. Do not point migration experiments at the only copy of the original data.
+1. In the terminal that will run the application, set `BLOG_DOTNET_CONNECTION_STRING` to a **disposable** SQL Server/LocalDB database copy. For example, enter the connection string for that copy at the prompt:
+
+   ```powershell
+   $env:BLOG_DOTNET_CONNECTION_STRING = Read-Host "Disposable SQL Server/LocalDB connection string"
+   ```
+
+   If the approved migration changes configuration or provider, follow that plan's explicit data-conversion and configuration steps instead. Do not point migration experiments at the only copy of the original data.
 2. Preserve the original users and password hashes. A fresh database with a newly seeded administrator does not prove login/data migration compatibility.
 3. Start the approved host on loopback.
 
