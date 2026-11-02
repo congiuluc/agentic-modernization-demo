@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "setupBaseline",
+      "id": "001-setupBaseline-legacyblog-local",
+      "description": "Establish the local baseline for LegacyBlog before modernization work begins.",
+      "reason": "A frozen baseline is required to compare the in-place Framework path and the .NET 10 migration path without ambiguity.",
+      "requirements": "Capture current route/auth/antiforgery/validation/moderation/data-persistence behavior from LegacyBlog.sln and produce a baseline verification bundle for local execution only. Include baseline build result, key HTTP behavior checks, login checks, and restart-persistence checks. Snapshot source from LegacyBlog folder.",
+      "dependencies": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Created frozen baseline artifacts under LegacyBlog/test/test-cases, generated baseline summary, and captured passing local build/test baseline.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "upgrade",
+      "id": "002-upgrade-net472-to-net10-assessment",
+      "description": "Upgrade assessment task for migration from .NET Framework 4.7.2 baseline to net10.0 target.",
+      "reason": "The user explicitly requested comparison of in-place Framework servicing against migration to .NET 10 and ASP.NET Core MVC, with net10.0 as the configured comparison target.",
+      "requirements": "Define and execute the modernization upgrade plan needed to move LegacyBlog from 4.7.2-era runtime/project assumptions to net10.0 target conditions, including project-format readiness and build pipeline compatibility. Preserve local-only execution scope and avoid cloud deployment concerns.",
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Completed .NET 4.7.2 to net10.0 readiness assessment for LegacyBlog, including project format conversion scope and local build pipeline compatibility gates. Validated baseline build and unit-test execution on current branch and produced the task modernization summary artifact.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-systemweb-owin-razor-routing",
+      "description": "Migrate HTTP pipeline and presentation behavior from System.Web/OWIN/Razor MVC5 to ASP.NET Core MVC equivalents.",
+      "reason": "System.Web and OWIN startup semantics do not carry directly to .NET 10 and must be transformed with behavior parity.",
+      "requirements": "Preserve all effective routes and endpoint behavior, authorization boundaries, antiforgery guarantees, validation outcomes, and moderation workflows while mapping System.Web lifecycle behavior, OWIN cookie-auth behavior, and Razor view behavior to ASP.NET Core MVC patterns. Keep local operation only.",
+      "dependencies": [
+        "002-upgrade-net472-to-net10-assessment"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Completed migration from System.Web/OWIN/MVC5 pipeline and Razor routing to ASP.NET Core MVC on .NET 10, preserving route surface, cookie-auth boundaries, antiforgery/validation behavior, and moderation workflows with passing build/tests and clean consistency validation.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-ef6-localdb-persistence",
+      "description": "Preserve persistent data behavior while modernizing EF6 and LocalDB usage for the target runtime path.",
+      "reason": "Data continuity is required for posts, comments, moderation state, seed markers, and restart persistence.",
+      "requirements": "Plan and execute data-layer modernization that retains LocalDB-backed persistence semantics and preserves existing data and moderation records. Include explicit pre-change database backup procedure, rollback procedure, and schema/data compatibility checks so the original data can be restored if acceptance checks fail.",
+      "dependencies": [
+        "003-transform-systemweb-owin-razor-routing"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Added LocalDB persistence compatibility guards, backup/restore/schema-check scripts, and startup wiring to preserve EF/LocalDB data continuity with passing build/tests.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "005-transform-identity-login-compatibility",
+      "description": "Maintain authentication and original login continuity across identity modernization.",
+      "reason": "Original administrator/user credentials must remain usable after migration.",
+      "requirements": "Ensure ASP.NET Identity password-hash compatibility is preserved so existing logins continue to authenticate after migration. Preserve authorization behavior, cookie/session expectations, and antiforgery integration with authenticated flows while allowing secure forward compatibility for hash upgrades after successful authentication.",
+      "dependencies": [
+        "004-transform-ef6-localdb-persistence"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Implemented ASP.NET Identity hash-compatibility login flow by verifying with IdentityV3 (including legacy v2 support) and automatically rehashing/upgrading legacy hashes after successful authentication while preserving existing cookie auth, authorization, and antiforgery behavior. Build and tests pass.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "integrationTest",
+      "id": "006-integrationTest-local-acceptance",
+      "description": "Build integration tests for migrated Azure services and run post-migration verification",
+      "reason": "The user requires measurable acceptance checks for build, HTTP behavior, login compatibility, and restart persistence.",
+      "requirements": "Run local post-migration verification for LegacyBlog including build success, key HTTP route/response checks, original login checks, and restart-persistence checks with persistent data retained.",
+      "dependencies": [
+        "001-setupBaseline-legacyblog-local",
+        "002-upgrade-net472-to-net10-assessment",
+        "003-transform-systemweb-owin-razor-routing",
+        "004-transform-ef6-localdb-persistence",
+        "005-transform-identity-login-compatibility"
+      ],
+      "status": "success",
+      "taskSummary": "Executed post-migration local acceptance verification end-to-end; all 21 integration checks passed covering build, HTTP behavior, login compatibility, and restart persistence. Applied required runtime/build wiring fixes to satisfy acceptance checks."
+    },
+    {
+      "type": "security",
+      "id": "007-security-cve-remediation",
+      "description": "Scan project dependencies for known CVEs and remediate vulnerabilities.",
+      "reason": "Security/CVE remediation is required in every modernization plan.",
+      "requirements": "Assess LegacyBlog dependency set for known vulnerabilities and upgrade to patched versions where feasible while preserving baseline behavior and local execution constraints. If a fix requires a major-version jump, document compatibility risk and required follow-up validation.",
+      "dependencies": [
+        "005-transform-identity-login-compatibility"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "status": "success",
+      "taskSummary": "Completed dependency CVE validation for LegacyBlog. No vulnerable NuGet packages found; no package upgrades required. Build and unit tests pass. TLS handshake issue in skill script was mitigated by dotnet CLI vulnerability audit.",
+      "successCriteriaStatus": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      },
+      "cveReport": ".github\\modernize\\dotnet-blog-upgrade\\007-security-cve-remediation\\final-cve-report.json"
+    }
+  ],
+  "metadata": {
+    "planName": "dotnet-blog-upgrade",
+    "projectName": "LegacyBlog.sln",
+    "language": "dotnet",
+    "createdAt": "2026-10-22T09:04:42+02:00",
+    "version": "1.0"
+  }
+}

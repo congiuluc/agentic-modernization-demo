@@ -74,6 +74,7 @@ h1, h2, h3, h4 { font-family: "Aptos Display", Aptos, "Segoe UI", system-ui, san
 .docs-body h4 { margin: 1.75rem 0 0.75rem; font-size: 1rem; }
 .docs-body :is(h2, h3, h4) { scroll-margin-top: 7rem; }
 .docs-body p, .docs-body ul, .docs-body ol { margin: 0 0 1.25rem; }
+.docs-body video { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 0 1.25rem; border-radius: 0.625rem; background: var(--cp-bg-elevated); }
 .docs-body :last-child { margin-bottom: 0; }
 .docs-body li { margin-bottom: 0.5rem; padding-left: 0.25rem; }
 .docs-body li::marker { color: var(--cp-accent); }

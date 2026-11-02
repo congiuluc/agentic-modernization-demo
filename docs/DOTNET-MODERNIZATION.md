@@ -6,6 +6,14 @@ Modernize the ASP.NET MVC 5 blog with the **Modernize CLI**: assess the applicat
 
 > **Modernization, not application startup, is the goal.** Local setup is an optional supporting step. Codespaces is also optional; its .NET 10 SDK does not provide Windows-only Framework MSBuild, IIS Express, or LocalDB.
 
+## Recorded demo examples
+
+Use the [saved .NET assessment and plan](../demo/assets/dotnet/README.md) to show concrete outputs before or instead of a live generation step. Start with the [assessment dashboard](../demo/assets/dotnet/assessment/reports-20261022070217/index.html), then review the [resulting plan](../demo/assets/dotnet/dotnet-blog-upgrade/plan.md), including compatibility decisions, ordered tasks, rollback, and acceptance checks.
+
+The examples page also includes the [recorded demo video](../demo/assets/dotnet/video/GHC-Modernize-Demo.mp4), playable directly on the published documentation site.
+
+These are historical, AI-generated outputs from 22 October 2026, not evidence that the baseline in this checkout has been upgraded or validated. A fresh exercise still needs its own assessment, plan approval, and regression evidence.
+
 ## Modernization workflow
 
 ### 1. Optional: set up and run the original application

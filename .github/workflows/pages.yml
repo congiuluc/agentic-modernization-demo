@@ -8,6 +8,7 @@ on:
       - dotnet/README.md
       - java/README.md
       - docs/**
+      - demo/assets/dotnet/**
       - scripts/Build-Docs.ps1
       - .github/workflows/pages.yml
   workflow_dispatch:

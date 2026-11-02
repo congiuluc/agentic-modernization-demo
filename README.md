@@ -155,6 +155,7 @@ Two independent blogs with equivalent publishing, authentication, and comment-mo
 | --- | --- |
 | Follow the full modernization exercise | [Modernization guide](docs/MODERNIZATION.md) |
 | Modernize one application with the CLI | [.NET modernization](docs/DOTNET-MODERNIZATION.md) or [Java modernization](docs/JAVA-MODERNIZATION.md) |
+| Show recorded demo, assessment, and plan outputs | [.NET demo examples](demo/assets/dotnet/README.md), with a demo video, HTML assessment dashboard, full plan, and recorded task summaries |
 | Present the CLI workflow | [14-slide HTML presentation](docs/presentation.html), viewable offline with PDF printing |
 | Understand YAML fields and CLI options | [Assessment configuration](docs/MODERNIZATION.md#optional-assessment-configuration) |
 | Optionally prepare a local validation environment | [.NET setup](dotnet/README.md) or [Java setup](java/README.md), linked as step 1 of each modernization workflow |

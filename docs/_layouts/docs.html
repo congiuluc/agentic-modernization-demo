@@ -82,7 +82,7 @@
       </a>
       <nav class="primary-nav" aria-label="Primary navigation">
         <a href="{{ '/' | relative_url }}"{% if page.page_key == 'home' %} aria-current="page"{% endif %}>Field guide</a>
-        <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% elsif page.page_key == 'dotnet-setup' %} aria-current="location"{% endif %}>.NET modernization</a>
+        <a href="{{ '/dotnet/' | relative_url }}"{% if page.page_key == 'dotnet' %} aria-current="page"{% elsif page.page_key == 'dotnet-setup' or page.page_key == 'dotnet-examples' or page.page_key == 'dotnet-example-plan' %} aria-current="location"{% endif %}>.NET modernization</a>
         <a href="{{ '/java/' | relative_url }}"{% if page.page_key == 'java' %} aria-current="page"{% elsif page.page_key == 'java-setup' %} aria-current="location"{% endif %}>Java modernization</a>
         <a href="{{ '/presentation/' | relative_url }}">Presentation <span aria-hidden="true">&nearr;</span></a>
         <a href="{{ site.repository_url | append: '/tree/main' | escape }}" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository, main branch (opens in a new tab)">GitHub <span aria-hidden="true">&nearr;</span></a>
@@ -105,7 +105,7 @@
         {% endif %}
         <p class="hero-description">{{ page.description | escape }}</p>
         <div class="hero-actions">
-          <a class="button primary" href="{% if page.section == 'Optional baseline setup' %}#document{% else %}#modernization-workflow{% endif %}">{{ page.action_label | escape }} <span aria-hidden="true">&rarr;</span></a>
+          <a class="button primary" href="{% if page.section == 'Optional baseline setup' or page.section == 'Demo examples' %}#document{% else %}#modernization-workflow{% endif %}">{{ page.action_label | escape }} <span aria-hidden="true">&rarr;</span></a>
           <a class="button secondary" href="{{ '/presentation/' | relative_url }}">View presentation <span aria-hidden="true">&nearr;</span></a>
         </div>
         <p class="hero-caption">A practice workspace. A reviewable process. Not a completed migration.</p>
@@ -143,7 +143,7 @@
           <summary>On this page</summary>
           <nav id="page-contents" aria-label="On this page"><a href="#page-title">Overview</a><a href="#document">Read the guide</a></nav>
         </details>
-        <div class="sidebar-note"><p class="eyebrow">Source-first docs</p><p>This guide comes directly from the repository. Generated assessment reports stay out of the public site.</p><a href="{{ page.source_url | escape }}" target="_blank" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">&nearr;</span></a></div>
+        <div class="sidebar-note"><p class="eyebrow">Source-first docs</p><p>This guide comes directly from the repository. Only curated demo artifacts are published; active assessment sessions stay out of the public site.</p><a href="{{ page.source_url | escape }}" target="_blank" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">&nearr;</span></a></div>
       </aside>
     </div>
   </main>

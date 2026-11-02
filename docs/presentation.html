@@ -450,7 +450,7 @@ $goal = "Plan only this Spring MVC app: align JDK, Spring, Security, Hibernate, 
 Preserve existing routes and behavior.
 Keep data and original logins intact.
 Do not add Azure services or deploy.
-Stop after planning for my approval.</code></pre><p>Then show the optional CI assessment template and the separate PR regression workflow.</p><p class="small">Assessment and execution time depend on the app, tools, model availability, and service access. Prepare the toolchain and a database backup before a live demo.</p></div>
+Stop after planning for my approval.</code></pre><p>Show the <a data-examples-link href="../demo/assets/dotnet/README.md">recorded .NET demo video, assessment, and plan</a> when live generation is impractical. These are historical examples, not verification of the current checkout.</p><p class="small">Then show the optional CI assessment template and separate PR regression workflow. Prepare the toolchain and a database backup before a live demo.</p></div>
       </div>
     </section>
 
@@ -576,6 +576,9 @@ Stop after planning for my approval.</code></pre><p>Then show the optional CI as
           const guide = new URL("../", location.href);
           guide.searchParams.set("scoutTheme", document.documentElement.dataset.theme);
           document.querySelectorAll("[data-guide-link]").forEach(link => { link.href = guide.href; });
+          const examples = new URL("../dotnet/examples/", location.href);
+          examples.searchParams.set("scoutTheme", document.documentElement.dataset.theme);
+          document.querySelectorAll("[data-examples-link]").forEach(link => { link.href = examples.href; });
         }
       }
 

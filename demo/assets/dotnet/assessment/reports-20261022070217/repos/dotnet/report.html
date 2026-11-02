@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assessment - LegacyBlog</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-card: #f8f9fa;
+  --bg-page: #f0f1f3;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #6b7280;
+  --border-color: #d0d7de;
+  --border-light: #e1e4e8;
+  --link-color: #2563eb;
+  --color-mandatory: #E3008C;
+  --color-potential: #637CEF;
+  --color-optional: #A19F9D;
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-family); font-size: 13px; color: var(--text-primary); background: var(--bg-primary); line-height: 1.5; margin: 0; padding: 0; }
+a { color: var(--link-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Page layout ───────────────────────────────────────────── */
+.main { margin: 0; padding: 24px 32px; background: var(--bg-primary); }
+.back-link { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; display: block; }
+h1 { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 20px; }
+
+/* ── Report cards (matches VS Code .vscode-report-card) ──── */
+.report-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 4px; padding: 12px; margin-bottom: 20px; }
+.report-card h2 { font-size: 14px; font-weight: 600; margin: 0; color: var(--text-primary); }
+.report-card-body { margin-top: 16px; }
+
+/* ── Component Information (two-column) ────────────────── */
+.app-info-container { display: flex; gap: 8px; flex-wrap: wrap; }
+.app-info-column { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.app-info-row { display: flex; align-items: baseline; }
+.app-info-label { width: 136px; flex-shrink: 0; font-weight: 600; color: var(--text-primary); }
+.app-info-value { flex: 1; color: var(--text-primary); }
+
+/* ── Issue Summary (pie charts + legend) ─────────────────── */
+.cards-container { display: flex; align-items: stretch; gap: 20px; flex-wrap: wrap; }
+.issue-summary-card { flex: 2; }
+.domain-summary-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; }
+.domain-summary-item { flex: 1; min-width: 120px; text-align: center; padding: 0 16px; border-right: 1px solid var(--border-light); }
+.domain-summary-item:last-child { border-right: none; }
+.domain-summary-item h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 8px; }
+.domain-summary-item .count { font-size: 12px; color: var(--text-secondary); }
+.criticality-legend { display: flex; flex-wrap: wrap; gap: 15px; padding-top: 12px; justify-content: center; }
+.criticality-legend .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.legend-swatch { display: inline-block; width: 1em; height: 1em; border-radius: 2px; }
+
+/* ── Issue list tables ───────────────────────────────────── */
+.issue-section { margin-top: 20px; }
+.issue-section h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.issue-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+.issue-table th { text-align: left; text-transform: uppercase; font-weight: 600; font-size: calc(13px * 0.875); padding: 6px 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
+.issue-table td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.col-issue { width: 55%; }
+.col-criticality { width: 25%; }
+.col-storypoint { width: 20%; }
+
+/* ── Target dropdown ─────────────────────────────────────── */
+.target-select-container { margin: 4px 0 16px 0; display: flex; align-items: center; gap: 8px; }
+.target-select-container label { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+.target-select-container select { font-family: var(--font-family); font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; }
+
+/* ── Filter bar ──────────────────────────────────────────── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 16px; margin: 16px 0 8px 0; align-items: center; }
+.multi-select { position: relative; display: inline-block; min-width: 140px; }
+.multi-select-btn { font-family: var(--font-family); font-size: 13px; padding: 4px 24px 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; width: 100%; text-align: left; position: relative; white-space: nowrap; }
+.multi-select-btn::after { content: '\25BE'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-secondary); }
+.multi-select-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; margin-top: 2px; }
+.multi-select.open .multi-select-dropdown { display: block; }
+.multi-select-option { display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.multi-select-option:hover { background: var(--bg-secondary); }
+.multi-select-option input[type=checkbox] { margin: 0; cursor: pointer; }
+.clear-filters { font-size: 12px; color: var(--link-color); cursor: pointer; margin-left: 4px; }
+
+/* ── Criticality labels (colored square + text) ──────────── */
+.crit-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.crit-square { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.crit-square-mandatory { background: var(--color-mandatory); }
+.crit-square-potential { background: var(--color-potential); }
+.crit-square-optional { background: var(--color-optional); }
+
+/* ── Expandable rows ─────────────────────────────────────── */
+.expand-btn { background: none; border: none; cursor: pointer; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; transition: transform 0.15s; padding: 0; vertical-align: middle; flex-shrink: 0; }
+.expand-btn.open { transform: rotate(90deg); }
+.issue-title-cell { display: flex; align-items: center; gap: 4px; }
+.detail-row td { padding: 0; border-bottom: 1px solid var(--border-light); white-space: normal; overflow: visible; text-overflow: clip; }
+.detail-content { display: flex; gap: 0; padding: 8px 8px 8px 32px; min-width: 0; }
+.file-list { flex: 0 0 50%; min-width: 0; overflow: hidden; }
+.file-list table { width: 100%; border-collapse: collapse; }
+.file-list th { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; height: 32px; }
+.file-list td { font-size: 13px; padding: 6px 8px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.file-list .file-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; display: block; }
+.file-list .position { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+.explanation-panel { flex: 1; padding-left: 16px; min-width: 0; overflow-wrap: break-word; word-wrap: break-word; }
+.explanation-panel h4 { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border-color); height: 32px; margin: 0; }
+.explanation-panel p { font-size: 13px; padding: 8px 0; color: var(--text-primary); line-height: 1.6; white-space: normal; word-break: break-word; }
+
+/* ── Experimental badge ──────────────────────────────────── */
+.badge-experimental { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #fef9c3; color: #854d0e; vertical-align: middle; margin-left: 8px; cursor: default; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer { text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 13px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .main { padding: 16px; }
+  .app-info-container { flex-direction: column; }
+  .domain-summary-container { flex-direction: column; }
+  .domain-summary-item { border-right: none; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  .detail-content { flex-direction: column; }
+  .file-list { flex: none; width: 100%; }
+  .explanation-panel { padding-left: 0; padding-top: 8px; }
+}
+/* ── Tab navigation ──────────────────────────────────────── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); margin-bottom: 28px; flex-wrap: wrap; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 18px; font-size: 13px; font-family: var(--font-family); color: var(--text-secondary); cursor: pointer; margin-bottom: -1px; white-space: nowrap; position: relative; }
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--link-color); border-bottom-color: var(--link-color); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Tooltip on tab ──────────────────────────────────────── */
+.tab-btn[data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #24292f; color: #ffffff; font-size: 12px; font-weight: 400; padding: 6px 10px; border-radius: 4px; white-space: normal; width: max-content; max-width: 260px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; }
+.tab-btn[data-tooltip]:hover::after { opacity: 1; }
+
+/* ── Fact content — prose column ─────────────────────────── */
+.fact-content { max-width: 860px; margin: 0 auto; line-height: 1.75; color: var(--text-primary); font-size: 14px; }
+.fact-content h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h1 + p { margin-top: 6px; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.fact-content h2 { font-size: 17px; font-weight: 700; margin: 36px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px 0; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; color: var(--text-secondary); }
+.fact-content p { margin: 10px 0; color: var(--text-primary); }
+.fact-content ul, .fact-content ol { margin: 10px 0 10px 22px; }
+.fact-content li { margin: 5px 0; }
+.fact-content a { color: var(--link-color); }
+.fact-content a:hover { text-decoration: underline; }
+
+/* ── Fact tables ─────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+.fact-content table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
+.fact-content thead { background: var(--bg-card); }
+.fact-content th { text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+.fact-content td { padding: 9px 14px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text-primary); }
+.fact-content tr:last-child td { border-bottom: none; }
+.fact-content tbody tr:hover { background: #f6f8fa; }
+
+/* ── Fact code ───────────────────────────────────────────── */
+.fact-content code { font-family: var(--font-mono); font-size: 12px; background: #f0f1f3; padding: 2px 6px; border-radius: 4px; color: #c7254e; }
+.fact-content pre { background: #f6f8fa; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
+.fact-content pre code { background: none; color: var(--text-primary); padding: 0; border-radius: 0; }
+.fact-content hr { border: none; border-top: 1px solid var(--border-light); margin: 28px 0; }
+.fact-content strong { font-weight: 600; }
+.fact-content em { font-style: italic; }
+.fact-content blockquote { border-left: 3px solid var(--border-color); margin: 12px 0; padding: 4px 16px; color: var(--text-secondary); }
+.fact-unavailable { padding: 32px 0; }
+.fact-unavailable h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: none; letter-spacing: 0; margin: 0 0 12px 0; }
+.fact-unavailable p { margin: 0 0 8px 0; color: var(--text-secondary); }
+.fact-unavailable ol, .fact-unavailable ul { margin: 0 0 0 22px; color: var(--text-primary); }
+.fact-unavailable li { margin: 6px 0; }
+
+/* ── Mermaid diagram card ─────────────────────────────────── */
+.mermaid { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 24px 16px; margin: 20px 0; overflow-x: auto; text-align: center; cursor: pointer; position: relative; }
+.mermaid:hover { border-color: var(--border-color); }
+.mermaid svg { max-width: 100%; height: auto !important; display: inline-block; }
+.mermaid-zoom-hint { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--text-muted); opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.mermaid:hover .mermaid-zoom-hint { opacity: 1; }
+
+/* ── Diagram lightbox ────────────────────────────────────── */
+.diagram-lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); align-items: center; justify-content: center; cursor: zoom-out; padding: 48px 32px; }
+.diagram-lightbox.open { display: flex; }
+.diagram-lightbox-inner { background: #ffffff; border-radius: 10px; padding: 32px; width: 88vw; max-height: 88vh; overflow: hidden; cursor: default; box-shadow: 0 24px 64px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+.diagram-lightbox-inner svg { width: 100% !important; height: auto !important; max-height: 76vh; display: block; }
+.diagram-lightbox-close { position: fixed; top: 20px; right: 24px; background: #ffffff; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1001; }
+.diagram-lightbox-close:hover { background: var(--bg-card); }
+.diagram-lightbox-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #ffffff; font-size: 12px; padding: 6px 14px; border-radius: 20px; pointer-events: none; white-space: nowrap; z-index: 1001; }
+.rulebook-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.5em;
+    font-size: 0.85rem;
+    padding: 0;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid rgba(46, 160, 67, 0.3);
+    color: #2eA043;
+    cursor: pointer;
+    opacity: 0.9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.2s, background 0.2s;
+}
+.rulebook-badge:hover {
+    opacity: 1.0;
+    background: rgba(46, 160, 67, 0.1);
+}
+</style>
+<script>
+window.__mermaidPending = [];
+window.__mermaidReady = false;
+window.__renderMermaidIn = function(container) {
+  // Until the real implementation overrides this (after the ES module import
+  // resolves), just queue the container so we can render it later.
+  if (container) { window.__mermaidPending.push(container); }
+};
+</script>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+
+// Real implementation: actually run mermaid on the unprocessed diagrams in the
+// given container (only ones not already rendered). Adds a "Click to expand"
+// hint span after each successful render so the lightbox affordance is
+// discoverable.
+window.__renderMermaidIn = function(container) {
+  var nodes = container ? container.querySelectorAll('.mermaid:not([data-processed])') : [];
+  if (nodes.length > 0) {
+    mermaid.run({ nodes: Array.from(nodes) }).then(function() {
+      nodes.forEach(function(node) {
+        if (!node.querySelector('.mermaid-zoom-hint')) {
+          var hint = document.createElement('span');
+          hint.className = 'mermaid-zoom-hint';
+          hint.textContent = 'Click to expand';
+          node.appendChild(hint);
+        }
+      });
+    });
+  }
+};
+
+// Drain any containers that were queued by the shim while mermaid was loading.
+// Use a Set to dedupe in case a container was both queued and is also the
+// initial-active panel below.
+var drained = new Set();
+(window.__mermaidPending || []).forEach(function(c) {
+  if (!drained.has(c)) { drained.add(c); window.__renderMermaidIn(c); }
+});
+window.__mermaidPending = [];
+window.__mermaidReady = true;
+
+// Render diagrams visible on initial load (the active tab panel(s) may not have
+// been queued by anyone — DOMContentLoaded handlers run before this if the
+// module is cached, after this if it's not, so handle both cases here).
+function renderActivePanels() {
+  document.querySelectorAll('.tab-panel.active').forEach(function(p) {
+    if (!drained.has(p)) { drained.add(p); window.__renderMermaidIn(p); }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderActivePanels);
+} else {
+  renderActivePanels();
+}
+</script>
+</head><body>
+<div id="diagram-lightbox" class="diagram-lightbox" role="dialog" aria-modal="true">
+  <button class="diagram-lightbox-close" id="diagram-lightbox-close" aria-label="Close">&#x2715;</button>
+  <div class="diagram-lightbox-hint">Scroll to zoom &nbsp;·&nbsp; Drag to pan &nbsp;·&nbsp; Double-click to reset</div>
+  <div class="diagram-lightbox-inner" id="diagram-lightbox-inner"></div>
+</div>
+<div class="main">
+<a class="back-link" href="../../index.html">&#8592; Back to aggregate dashboard</a>
+<h1>LegacyBlog</h1>
+<div class="report-card">
+  <h2>Component Information</h2>
+  <div class="report-card-body">
+    <div class="app-info-container">
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Component Name</span><span class="app-info-value">LegacyBlog</span></div>
+        <div class="app-info-row"><span class="app-info-label">Repository</span><span class="app-info-value">dotnet</span></div>
+        <div class="app-info-row"><span class="app-info-label">Application</span><span class="app-info-value">dotnet</span></div>
+      </div>
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Effort</span><span class="app-info-value" id="effort-display">M (total story points: 25)</span></div>
+        <div class="app-info-row"><span class="app-info-label">Build Tools</span><span class="app-info-value">MSBuild</span></div>
+        <div class="app-info-row"><span class="app-info-label">Frameworks</span><span class="app-info-value">.NETFramework,Version=v4.7.2</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="tab-issues" data-tooltip="Issues detected in the source code">Issues</button>
+  <button class="tab-btn" data-tab="tab-arch" data-tooltip="How the app&#39;s layers connect — from UI to data.">Architecture</button>
+  <button class="tab-btn" data-tab="tab-api" data-tooltip="Endpoints exposed by this app and how services communicate.">API Contracts</button>
+  <button class="tab-btn" data-tab="tab-config" data-tooltip="Environment settings, runtime profiles, and deployment manifests.">Configuration</button>
+  <button class="tab-btn" data-tab="tab-workflows" data-tooltip="Domain entities and the core flows users move through.">Business Workflows</button>
+  <button class="tab-btn" data-tab="tab-deps" data-tooltip="Libraries and frameworks this app depends on, grouped by category.">Dependencies</button>
+  <button class="tab-btn" data-tab="tab-data" data-tooltip="Database schema, entity relationships, and persistence behavior.">Data Model</button>
+</nav>
+<div id="tab-issues" class="tab-panel active">
+<div class="target-select-container">
+  <label for="target-select">Target Compute Service:</label>
+  <select id="target-select" onchange="onTargetChange(this.value)">
+    <option value="AppService.Windows" title="">Azure App Service</option>
+    <option value="AppService.Linux" title="">Azure Kubernetes Service</option>
+    <option value="AKS.Linux" title="">Azure Container Apps</option>
+    <option value="AKS.Windows" title="">Azure App Service Container</option>
+    <option value="ACA" title="">Azure App Service Managed Instance</option>
+  </select>
+</div>
+<div class="report-card">
+  <h2>Issue Summary</h2>
+  <div class="report-card-body">
+    <div class="domain-summary-container" id="donut-container">
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-mandatory)" stroke-width="15" stroke-dasharray="47.37 219.91" stroke-dashoffset="-0.00"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-potential)" stroke-width="15" stroke-dasharray="71.80 219.91" stroke-dashoffset="-48.87"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-optional)" stroke-width="15" stroke-dasharray="96.24 219.91" stroke-dashoffset="-122.17"/>
+</svg>
+
+        <h3>Cloud Readiness</h3>
+        <div class="count">9 issues</div>
+      </div>
+    </div>
+    <div class="criticality-legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-mandatory)"></span>Mandatory</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-potential)"></span>Potential</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-optional)"></span>Optional</div>
+    </div>
+  </div>
+</div>
+<div class="filter-bar" id="filter-bar">
+  <div class="multi-select" id="criticality-ms">
+    <button class="multi-select-btn" onclick="toggleMultiSelect('criticality-ms')">Criticality</button>
+    <div class="multi-select-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="mandatory" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Mandatory</label>
+      <label class="multi-select-option"><input type="checkbox" value="potential" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Potential</label>
+      <label class="multi-select-option"><input type="checkbox" value="optional" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Optional</label>
+    </div>
+  </div>
+  <a class="clear-filters" href="javascript:void(0)" onclick="clearAllFilters()">Clear all</a>
+</div>
+<div class="issue-section" data-domain="cloud-readiness">
+  <h2>Cloud Readiness</h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{"AppService.Windows":{"effort":3,"severity":"mandatory"},"AppService.Linux":{"effort":3,"severity":"mandatory"},"AKS.Linux":{"effort":3,"severity":"mandatory"},"AKS.Windows":{"effort":3,"severity":"mandatory"},"ACA":{"effort":3,"severity":"mandatory"},"AppServiceContainer.Linux":{"effort":3,"severity":"mandatory"},"AppServiceContainer.Windows":{"effort":3,"severity":"mandatory"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"information"}}' data-default-effort="3" data-default-severity="mandatory" data-rule="Local.0004" onclick="toggleRow('row-cloudreadiness-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-0">&#x276F;</button> Logging to local or network paths detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Global.asax.cs">LegacyBlog\Global.asax.cs</span></td><td><span class="position">Line 18, Col 32</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Logging to local or network paths detected.</p><p>If you are targeting Managed Instance on Azure App Service, prefer Application Insights/App Service logging. If filesystem logs are required, write to a mounted Azure Files share configured via storage mounts and Key Vault secrets.</p><p>Logging APIs that write to disk might not work on Azure App Service or Container.</p><p>Use logging that stores logs in locations outside of the host unless its specifically required by your app. You can also use logging capabilities embedded in Azure, such as Azure App Service logging or Application Insights.</p><p>For migrating to AKS, use LogMonitor tool that can capture logs written to files, the console, or write logs and redirect them to Azure.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{"AppService.Windows":{"effort":3,"severity":"mandatory"},"AppService.Linux":{"effort":3,"severity":"mandatory"},"AKS.Linux":{"effort":3,"severity":"mandatory"},"AKS.Windows":{"effort":3,"severity":"potential"},"ACA":{"effort":3,"severity":"mandatory"},"AppServiceContainer.Linux":{"effort":3,"severity":"mandatory"},"AppServiceContainer.Windows":{"effort":3,"severity":"mandatory"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"mandatory"}}' data-default-effort="3" data-default-severity="mandatory" data-rule="Identity.0002" onclick="toggleRow('row-cloudreadiness-1', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-1">&#x276F;</button> Windows authentication detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-1" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Web.config">LegacyBlog\Web.config</span></td><td><span class="position"></span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Your app is using windows authentication which is not supported on Azure App Service, Azure Container Apps and Azure Kubernetes Service.</p><p>Azure App Service provides built-in authentication and authorization capabilities, so you can sign in users and access data by writing minimal or no code in your web app.</p><p>Follow the link below for more information.&quot;</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{"AppService.Windows":{"effort":3,"severity":"potential"},"AppService.Linux":{"effort":3,"severity":"potential"},"AKS.Linux":{"effort":3,"severity":"potential"},"AKS.Windows":{"effort":3,"severity":"potential"},"ACA":{"effort":3,"severity":"potential"},"AppServiceContainer.Linux":{"effort":3,"severity":"potential"},"AppServiceContainer.Windows":{"effort":3,"severity":"potential"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"potential"}}' data-default-effort="3" data-default-severity="potential" data-rule="Local.0003" onclick="toggleRow('row-cloudreadiness-2', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-2">&#x276F;</button> Local or network IO operations detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-2" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Global.asax.cs">LegacyBlog\Global.asax.cs</span></td><td><span class="position">Line 17, Col 12</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Your application has local or network IO operations.</p><p>If you are targeting Managed Instance on Azure App Service, move persistent I/O to storage mounts (Azure Files/UNC). Keep local writes to temp only; connect to external dependencies via private endpoints/VNet to reduce latency.</p><p>IO operations outside of the application folder might not be available on Azure App Service. Review and ensure IO APIs are attempting to access paths that will be available when your app is running on App Service sandbox. If you choose the containerized hosting option, your scenario still might be broken or have scalability issues.</p><p>Possible solutions:<br/>    1. Files that the application needs can be deployed with the application or put in Azure Storage. You can use Azure Storage File Shares as a drop-in replacement for on-premises file share.<br/>    2. Other services that the application depends on might need to be migrated to Azure, this way you will get the benefit of lower latency in the cloud.<br/>    3. If your application needs to depend on services that run on-premise, you can connect your Azure and local networks with ExpressRoute, Hybrid Connections, or VPN solutions.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{"AppService.Windows":{"effort":1,"severity":"potential"},"AppService.Linux":{"effort":1,"severity":"potential"},"AKS.Linux":{"effort":1,"severity":"potential"},"AKS.Windows":{"effort":1,"severity":"potential"},"ACA":{"effort":1,"severity":"potential"},"AppServiceContainer.Linux":{"effort":1,"severity":"potential"},"AppServiceContainer.Windows":{"effort":1,"severity":"potential"},"AppServiceManagedInstance.Windows":{"effort":1,"severity":"information"}}' data-default-effort="1" data-default-severity="potential" data-rule="Local.0007" onclick="toggleRow('row-cloudreadiness-3', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-3">&#x276F;</button> Local OS environment access detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">1</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-3" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Global.asax.cs">LegacyBlog\Global.asax.cs</span></td><td><span class="position">Line 16, Col 41</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Local OS environment access detected.</p><p>If you are targeting Managed Instance on Azure App Service, Read config via App Settings or App Configuration; avoid machine‑specific environment APIs. Persist environment setup via install scripts when needed.</p><p>When running in Azure App Service environment, your application can read environment variables that you define in App Service settings. Using environment API other than reading environment variables might indicate that your application depends on some local machine&#39;s features and might be broken on App Service sandbox or not scale well. Review your scenarios and either refactor them to be more cloud friendly or choose the option in App Service to host your application in the sandbox for Windows Container Web Apps.</p><p>If you choose to use other Azure hosting options such as Azure Container Apps (ACA) or Azure Kubernetes Service (AKS), environment APIs might work, however scaling still might be an issue.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{"AppService.Windows":{"effort":3,"severity":"potential"},"AppService.Linux":{"effort":3,"severity":"potential"},"AKS.Linux":{"effort":3,"severity":"potential"},"AKS.Windows":{"effort":3,"severity":"potential"},"ACA":{"effort":3,"severity":"potential"},"AppServiceContainer.Linux":{"effort":3,"severity":"potential"},"AppServiceContainer.Windows":{"effort":3,"severity":"potential"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"potential"}}' data-default-effort="3" data-default-severity="potential" data-rule="Database.0002" onclick="toggleRow('row-cloudreadiness-4', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-4">&#x276F;</button> SQL database connection detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-4" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Web.config">LegacyBlog\Web.config</span></td><td><span class="position"></span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>SQL database connection detected.</p><p>Ensure the database is available/reachable on Azure.</p><p>If it is not, there are multiple ways you can move your data to Azure:<br/>    1. Migrate to Azure SQL Database.<br/>    2. Consider Azure SQL Managed Instance if you need features that are not available in Azure SQL Database and you don’t want to use a VM.<br/>    3. Migrate your database servers directly to SQL Server on Azure VMs.</p><p>To assess database migration effort, you can use Azure Migrate tool, see the link below.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{"AppService.Windows":{"effort":3,"severity":"optional"},"AppService.Linux":{"effort":3,"severity":"optional"},"AKS.Linux":{"effort":3,"severity":"optional"},"AKS.Windows":{"effort":3,"severity":"optional"},"ACA":{"effort":3,"severity":"optional"},"AppServiceContainer.Linux":{"effort":3,"severity":"optional"},"AppServiceContainer.Windows":{"effort":3,"severity":"optional"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"mandatory"}}' data-default-effort="3" data-default-severity="optional" data-rule="Security.0003" onclick="toggleRow('row-cloudreadiness-5', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-5">&#x276F;</button> Hardcoded sensitive data detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-5" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Controllers\AccountController.cs">LegacyBlog\Controllers\AccountController.cs</span></td><td><span class="position">Line 15, Col 50</span></td></tr>
+            <tr><td><span class="file-path" title="LegacyBlog\Controllers\AccountController.cs">LegacyBlog\Controllers\AccountController.cs</span></td><td><span class="position">Line 20, Col 61</span></td></tr>
+            <tr><td><span class="file-path" title="LegacyBlog\Data\Bootstrap.cs">LegacyBlog\Data\Bootstrap.cs</span></td><td><span class="position">Line 29, Col 60</span></td></tr>
+            <tr><td><span class="file-path" title="LegacyBlog\Data\Bootstrap.cs">LegacyBlog\Data\Bootstrap.cs</span></td><td><span class="position">Line 27, Col 70</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Hardcoded sensitive data detected.</p><p>If you are targeting Managed Instance on Azure App Service, externalize secrets to Key Vault/App Configuration; use managed identity instead of passwords or embedded connection strings.</p><p>While if targeting other Azure compute services:</p><p>Avoid placing sensitive data such as passwords, ids, tokens etc., directly in config files and code since it compromises the security of your application.</p><p>Use Azure App Configuration or Azure KeyVault to store secrets.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{"AppService.Windows":{"effort":3,"severity":"optional"},"AppService.Linux":{"effort":3,"severity":"optional"},"AKS.Linux":{"effort":3,"severity":"optional"},"AKS.Windows":{"effort":3,"severity":"optional"},"ACA":{"effort":3,"severity":"optional"},"AppServiceContainer.Linux":{"effort":3,"severity":"optional"},"AppServiceContainer.Windows":{"effort":3,"severity":"optional"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"optional"}}' data-default-effort="3" data-default-severity="optional" data-rule="Database.0003" onclick="toggleRow('row-cloudreadiness-6', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-6">&#x276F;</button> System.Data.SqlClient dependency detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-6" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Web.config">LegacyBlog\Web.config</span></td><td><span class="position"></span></td></tr>
+            <tr><td><span class="file-path" title="LegacyBlog\Controllers\BlogController.cs">LegacyBlog\Controllers\BlogController.cs</span></td><td><span class="position">Line 23, Col 12</span></td></tr>
+            <tr><td><span class="file-path" title="LegacyBlog\Controllers\BlogController.cs">LegacyBlog\Controllers\BlogController.cs</span></td><td><span class="position">Line 23, Col 75</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>System.Data.SqlClient dependency is detected.</p><p>While System.Data.SqlClient will work in Azure, the newer Microsoft.Data.SqlClient package is the primary .NET SQL client moving forward and receiving the latest features. For example, Microsoft.Data.SqlClient easily allows use of Azure Managed Identity from a connection string.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{"AppService.Windows":{"effort":3,"severity":"optional"},"AppService.Linux":{"effort":3,"severity":"optional"},"AKS.Linux":{"effort":3,"severity":"optional"},"AKS.Windows":{"effort":3,"severity":"optional"},"ACA":{"effort":3,"severity":"optional"},"AppServiceContainer.Linux":{"effort":3,"severity":"optional"},"AppServiceContainer.Windows":{"effort":3,"severity":"optional"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"optional"}}' data-default-effort="3" data-default-severity="optional" data-rule="Security.0002" onclick="toggleRow('row-cloudreadiness-7', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-7">&#x276F;</button> Connection strings without configuration builders detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-7" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\Web.config">LegacyBlog\Web.config</span></td><td><span class="position"></span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Connection strings without configuration builders detected.  </p><p> Keeping connection strings directly in the app is not the best practice and might introduce security risks, increased maintenance, scalability challenges or compliance standards (such as PCI DSS, GDPR, etc.). </p><p> Instead, it is recommended to use configuration builders to get secrets from secure sources in Azure environment.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{"AppService.Windows":{"effort":3,"severity":"optional"},"AppService.Linux":{"effort":3,"severity":"optional"},"AKS.Linux":{"effort":3,"severity":"optional"},"AKS.Windows":{"effort":3,"severity":"optional"},"ACA":{"effort":3,"severity":"optional"},"AppServiceContainer.Linux":{"effort":3,"severity":"optional"},"AppServiceContainer.Windows":{"effort":3,"severity":"optional"},"AppServiceManagedInstance.Windows":{"effort":3,"severity":"optional"}}' data-default-effort="3" data-default-severity="optional" data-rule="Scale.0001" onclick="toggleRow('row-cloudreadiness-8', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-8">&#x276F;</button> Static content detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-8" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="LegacyBlog\LegacyBlog.csproj">LegacyBlog\LegacyBlog.csproj</span></td><td><span class="position"></span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Static content detected.</p><p>Your current approach of serving static content directly might lead to increased costs, performance issues, maintenance challenges (requiring application redeployment for content changes), and security risks.</p><p>Consider moving static content to Azure Blob Storage and adding Azure CDN.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</div><!-- #tab-issues -->
+<div id="tab-arch" class="tab-panel">
+  <div class="fact-content"><h1 id="architecture-diagram">Architecture Diagram</h1>
+<p>This document summarizes the current LegacyBlog architecture at two levels: application-level runtime/data flow and key internal component interactions. It reflects the existing ASP.NET MVC 5 monolith implementation.</p>
+<h2 id="application-architecture">Application Architecture</h2>
+<div class="mermaid">
+flowchart TD
+    subgraph Client["Client Layer"]
+        Browser["Web Browser"]
+    end
+
+    subgraph Presentation["Presentation Layer - ASP.NET MVC 5.2.9 on .NET Framework 4.7.2"]
+        MvcControllers["MVC Controllers and Razor Views"]
+        OwinCookie["OWIN Cookie Authentication"]
+    end
+
+    subgraph Business["Business Layer"]
+        BlogService["BlogService"]
+        Validation["Model Validation and Business Rules"]
+    end
+
+    subgraph Data["Data Layer - Entity Framework 6.4.4"]
+        Repo["BlogRepository"]
+        DbContext["BlogContext IdentityDbContext"]
+        SqlDb[("SQL Server LocalDB LegacyBlogDotNet")]
+    end
+
+    subgraph Infra["Infrastructure"]
+        Bootstrap["Bootstrap Seeder and Identity UserManager"]
+        ErrorHandling["Global and Controller Error Handling"]
+        FileLog["Local File Trace Log"]
+    end
+
+    Browser -->|"HTTP requests"| MvcControllers
+    MvcControllers -->|"authenticate admin"| OwinCookie
+    MvcControllers -->|"delegate use cases"| BlogService
+    BlogService -->|"apply rules and orchestration"| Validation
+    BlogService -->|"query and persist"| Repo
+    Repo -->|"entity queries and save changes"| DbContext
+    DbContext -->|"SQL operations"| SqlDb
+    Bootstrap -->|"initialize admin and sample data"| DbContext
+    ErrorHandling -->|"log failures"| FileLog
+</div>
+<h3 id="technology-stack-summary">Technology Stack Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Presentation</td><td>ASP.NET MVC</td><td>5.2.9</td><td>Route handling, controllers, Razor view rendering</td></tr>
+<tr><td>Presentation</td><td>OWIN Cookie Auth</td><td>4.2.2</td><td>Session authentication for admin access</td></tr>
+<tr><td>Business</td><td>Custom service layer (<code>BlogService</code>)</td><td>N/A</td><td>Business rules, validation, orchestration of blog operations</td></tr>
+<tr><td>Data Access</td><td>Entity Framework</td><td>6.4.4</td><td>ORM mapping, querying, persistence</td></tr>
+<tr><td>Data Access</td><td>ASP.NET Identity EntityFramework</td><td>2.2.4</td><td>User store and identity persistence</td></tr>
+<tr><td>Data Storage</td><td>SQL Server LocalDB</td><td>MSSQLLocalDB</td><td>Stores blog entities and identity tables</td></tr>
+<tr><td>Infrastructure</td><td>.NET Trace logging</td><td>.NET Framework 4.7.2 runtime</td><td>Writes operational errors to local log files</td></tr>
+</tbody></table></div>
+<h3 id="data-storage-external-services">Data Storage &amp; External Services</h3>
+<p>The application persists all domain and identity data in a single SQL Server LocalDB database (<code>LegacyBlogDotNet</code>) accessed through <code>BlogContext</code> (an <code>IdentityDbContext</code>). There is no external cache or message broker. Runtime integration outside the process is minimal and mainly consists of local file-based tracing for logs and environment-variable based bootstrap/connection configuration.</p>
+<h3 id="key-architectural-decisions">Key Architectural Decisions</h3>
+<ul>
+<li>Uses a layered monolith pattern where MVC controllers delegate business operations to <code>BlogService</code>, which in turn uses a repository abstraction over EF6.</li>
+<li>Centralizes data access with <code>BlogRepository</code> and <code>BlogContext</code> to keep controllers free of direct persistence concerns.</li>
+<li>Applies cross-cutting error handling in a shared <code>BlogController</code> base class and <code>Global.asax</code> lifecycle hooks for consistent HTTP error responses and trace logging.</li>
+</ul>
+<h2 id="component-relationships">Component Relationships</h2>
+<div class="mermaid">
+flowchart LR
+    subgraph Presentation["Presentation"]
+        PublicCtrl["PublicController"]
+        AdminCtrl["AdminController"]
+        AccountCtrl["AccountController"]
+        RouteConfig["RouteConfig"]
+        RouteId["RouteIdAttribute Binder"]
+    end
+
+    subgraph Business["Business Logic"]
+        BlogSvc["BlogService"]
+        ViewModels["ViewModels Forms and DTOs"]
+    end
+
+    subgraph DataAccess["Data Access"]
+        BlogRepo["BlogRepository"]
+        BlogCtx["BlogContext"]
+        Entities["Entities Post Category Comment BlogUser"]
+    end
+
+    subgraph Infrastructure["Infrastructure"]
+        BaseCtrl["BlogController Base"]
+        OwinStartup["OWIN Startup Cookie Auth"]
+        AppStart["MvcApplication Global.asax"]
+        Bootstrapper["Bootstrap Initializer"]
+    end
+
+    AppStart -->|"register routes"| RouteConfig
+    AppStart -->|"initialize data"| Bootstrapper
+    Bootstrapper -->|"seed and user setup"| BlogCtx
+
+    OwinStartup -.->|"auth middleware"| BaseCtrl
+    BaseCtrl -.->|"exception mapping and trace logging"| PublicCtrl
+    BaseCtrl -.->|"exception mapping and trace logging"| AdminCtrl
+    BaseCtrl -.->|"exception mapping and trace logging"| AccountCtrl
+
+    PublicCtrl -->|"invoke use cases"| BlogSvc
+    AdminCtrl -->|"invoke admin workflows"| BlogSvc
+    AccountCtrl -->|"identity auth flow"| BlogSvc
+    RouteId -.->|"bind route ids"| AdminCtrl
+
+    PublicCtrl -->|"bind and validate"| ViewModels
+    AdminCtrl -->|"bind and validate"| ViewModels
+    AccountCtrl -->|"bind and validate"| ViewModels
+
+    BlogSvc -->|"query and commands"| BlogRepo
+    BlogRepo -->|"LINQ and save"| BlogCtx
+    BlogCtx -->|"materialize and track"| Entities
+</div>
+<h3 id="component-inventory">Component Inventory</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Layer</th><th>Type</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td>PublicController</td><td>Presentation</td><td>MVC Controller</td><td>Handles public post listing, detail pages, and comment submission</td></tr>
+<tr><td>AdminController</td><td>Presentation</td><td>MVC Controller</td><td>Handles protected CRUD and moderation workflows for posts, categories, and comments</td></tr>
+<tr><td>AccountController</td><td>Presentation</td><td>MVC Controller</td><td>Handles login/logout and authentication cookie issuance</td></tr>
+<tr><td>RouteConfig</td><td>Presentation</td><td>Route Configuration</td><td>Registers attribute routing for MVC endpoints</td></tr>
+<tr><td>RouteIdAttribute</td><td>Presentation</td><td>Custom Model Binder</td><td>Converts route parameters to integer IDs safely</td></tr>
+<tr><td>BlogController</td><td>Infrastructure</td><td>Base Controller</td><td>Provides shared <code>BlogContext</code>, service wiring, and centralized exception-to-response handling</td></tr>
+<tr><td>Startup</td><td>Infrastructure</td><td>OWIN Startup</td><td>Configures cookie authentication middleware and auth settings</td></tr>
+<tr><td>MvcApplication (<code>Global.asax</code>)</td><td>Infrastructure</td><td>Application Bootstrap</td><td>Initializes routes, database, seed flow, antiforgery, and trace listeners</td></tr>
+<tr><td>Bootstrap</td><td>Infrastructure</td><td>Initializer</td><td>Seeds admin user and sample domain data on first startup</td></tr>
+<tr><td>BlogService</td><td>Business Logic</td><td>Service</td><td>Enforces business rules and orchestrates repository operations</td></tr>
+<tr><td>BlogRepository</td><td>Data Access</td><td>Repository</td><td>Exposes EF-backed queryables and persistence operations</td></tr>
+<tr><td>BlogContext</td><td>Data Access</td><td>DbContext</td><td>EF6/Identity context managing entity sets and database interaction</td></tr>
+<tr><td>Domain Entities</td><td>Data Access</td><td>Entity Models</td><td>Defines persisted data structures for posts, categories, comments, users, and seed state</td></tr>
+<tr><td>ViewModels (<code>PostForm</code>, <code>CategoryForm</code>, <code>CommentForm</code>, <code>LoginForm</code>)</td><td>Business Logic</td><td>DTO and Validation Models</td><td>Captures request input and validation constraints for MVC actions</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div id="tab-api" class="tab-panel">
+  <div class="fact-content"><h1 id="api-service-communication-contracts">API &amp; Service Communication Contracts</h1>
+<p>The solution exposes an attribute-routed ASP.NET MVC surface with public browsing, comment submission, account authentication, and admin moderation/content-management endpoints. Communication is entirely synchronous inside a single deployable service (controller -&gt; service -&gt; repository -&gt; EF/SQL), with no message bus or cross-service API hops.</p>
+<h2 id="service-catalog">Service Catalog</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Port</th><th>Category</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>LegacyBlog (<code>LegacyBlog.csproj</code>)</td><td><code>5080</code> in local run docs (IIS Express; configurable at launch)</td><td>Business</td><td>Single web app that serves public/admin HTTP endpoints, performs authentication, and persists blog data through EF6/Identity (<code>System.Web.Mvc</code>, <code>Microsoft.Owin.*</code>, <code>EntityFramework</code>).</td></tr>
+</tbody></table></div>
+<h2 id="api-endpoints-inventory">API Endpoints Inventory</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Method</th><th>Path</th><th>Request Type</th><th>Response Type</th></tr></thead><tbody>
+<tr><td>LegacyBlog/PublicController</td><td>GET</td><td><code>/</code></td><td>Query: <code>page</code></td><td>Razor view with <code>PostList</code> (200; 400 for invalid page, 404 for page/category miss)</td></tr>
+<tr><td>LegacyBlog/PublicController</td><td>GET</td><td><code>/categories/{slug}</code></td><td>Path: <code>slug</code>; Query: <code>page</code></td><td>Razor view with <code>PostList</code> (200; 404 if category not found)</td></tr>
+<tr><td>LegacyBlog/PublicController</td><td>GET</td><td><code>/posts/{slug}</code></td><td>Path: <code>slug</code></td><td>Razor view with <code>PostDetail</code> + <code>CommentForm</code> (200; 404 if post missing/unpublished)</td></tr>
+<tr><td>LegacyBlog/PublicController</td><td>POST</td><td><code>/posts/{slug}/comments</code></td><td>Path: <code>slug</code>; body/form DTO: <code>CommentForm</code></td><td>Redirect to detail on success (302); validation failure re-renders <code>PostDetail</code> (400); 404 if post missing</td></tr>
+<tr><td>LegacyBlog/PublicController</td><td>GET</td><td><code>/error</code></td><td>None</td><td>Razor error view (500)</td></tr>
+<tr><td>LegacyBlog/AccountController</td><td>GET</td><td><code>/account/login</code></td><td>Query: <code>returnUrl</code></td><td>Razor view with <code>LoginForm</code> (200)</td></tr>
+<tr><td>LegacyBlog/AccountController</td><td>POST</td><td><code>/account/login</code></td><td>body/form DTO: <code>LoginForm</code></td><td>Auth cookie sign-in + redirect (302); invalid credentials re-render form (200/400)</td></tr>
+<tr><td>LegacyBlog/AccountController</td><td>POST</td><td><code>/account/logout</code></td><td>Anti-forgery form post</td><td>Cookie sign-out + redirect <code>/</code> (302)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin</code></td><td>Authenticated admin cookie</td><td>Razor dashboard view (200; 401/403 if unauthorized)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/posts</code></td><td>Query: <code>page</code>; authenticated admin cookie</td><td>Razor view with <code>PostList</code> (200; 400/404 on invalid paging input)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/posts/create</code></td><td>Authenticated admin cookie</td><td>Razor <code>PostForm</code> view (200)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/posts/{id}/edit</code></td><td>Path: <code>id</code> via <code>RouteId</code></td><td>Razor <code>PostForm</code> view (200; 404 if post not found)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/posts/create</code></td><td>body/form DTO: <code>PostForm</code>; anti-forgery token</td><td>Save + redirect <code>/admin/posts</code> (302); validation issues re-render form (400); conflict 409 on slug/data conflicts</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/posts/{id}/edit</code></td><td>Path: <code>id</code>; body/form DTO: <code>PostForm</code>; anti-forgery token</td><td>Save + redirect <code>/admin/posts</code> (302); 404 if post missing; 409 on conflicts</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/posts/{id}/delete</code></td><td>Path: <code>id</code></td><td>Razor confirmation view with <code>Post</code> (200; 404 if post missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/posts/{id}/delete</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Delete + redirect <code>/admin/posts</code> (302; 404 if post missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/posts/{id}/publish</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Toggle publish true + redirect (302; 404 if post missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/posts/{id}/unpublish</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Toggle publish false + redirect (302; 404 if post missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/categories</code></td><td>Authenticated admin cookie</td><td>Razor view with <code>Category</code> list (200)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/categories/create</code></td><td>Authenticated admin cookie</td><td>Razor <code>CategoryForm</code> view (200)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/categories/{id}/edit</code></td><td>Path: <code>id</code> via <code>RouteId</code></td><td>Razor <code>CategoryForm</code> view (200; 404 if category missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/categories/create</code></td><td>body/form DTO: <code>CategoryForm</code>; anti-forgery token</td><td>Save + redirect <code>/admin/categories</code> (302); validation issues re-render form (400); 409 on slug conflicts</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/categories/{id}/edit</code></td><td>Path: <code>id</code>; body/form DTO: <code>CategoryForm</code>; anti-forgery token</td><td>Save + redirect <code>/admin/categories</code> (302); 404 if missing; 409 on conflicts</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/categories/{id}/delete</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Delete + redirect <code>/admin/categories</code> (302); category-in-use path re-renders categories view; 409 conflict path enforced in service</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>GET</td><td><code>/admin/comments</code></td><td>Authenticated admin cookie</td><td>Razor view of pending <code>Comment</code> list (200)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/comments/{id}/approve</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Moderate + redirect <code>/admin/comments</code> (302; 404 if missing)</td></tr>
+<tr><td>LegacyBlog/AdminController</td><td>POST</td><td><code>/admin/comments/{id}/delete</code></td><td>Path: <code>id</code>; anti-forgery token</td><td>Moderate/delete + redirect <code>/admin/comments</code> (302; 404 if missing)</td></tr>
+</tbody></table></div>
+<p>Versioning scheme: none detected (no URL/header/query API versioning pattern).</p>
+<h2 id="management-observability-endpoints">Management &amp; Observability Endpoints</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Endpoint</th><th>Custom Metrics (if any)</th></tr></thead><tbody>
+<tr><td>LegacyBlog</td><td>None detected (<code>/health</code>, <code>/healthz</code>, <code>/swagger</code>, <code>/actuator*</code> not present)</td><td>None detected (<code>@Timed</code>, meter registration, or exporter endpoints not present)</td></tr>
+</tbody></table></div>
+<h2 id="dtos-contracts">DTOs &amp; Contracts</h2>
+<p>The project uses MVC form/view contracts rather than JSON API DTOs. Request DTOs are <code>PostForm</code>, <code>CategoryForm</code>, <code>CommentForm</code>, and <code>LoginForm</code> (form-bound request bodies), with <code>RouteIdAttribute</code> as an explicit path <code>id</code> binder contract for admin edit/delete actions. Response/view contracts are <code>PostList</code> and <code>PostDetail</code>, while domain entity classes (<code>Post</code>, <code>Category</code>, <code>Comment</code>, <code>BlogUser</code>, <code>SeedState</code>) are passed to views or used internally by services/repositories (for entity details, see <code>data-architecture.md</code>).</p>
+<p>No gateway-level aggregation DTOs were found because there is no API gateway or multi-service composition boundary. DTOs/entities are mutable C# classes (no C# records/immutable types found). OpenAPI/Swagger specs and annotations are not present, and no GraphQL or protobuf schemas were found. Serialization is standard ASP.NET MVC model binding with Razor view rendering; no custom JSON serializer pipeline was identified.</p>
+<h2 id="communication-patterns">Communication Patterns</h2>
+<p>Communication is synchronous and in-process: controllers call <code>BlogService</code>, which calls <code>BlogRepository</code>, which uses EF6/Identity over SQL Server LocalDB. No asynchronous messaging (Kafka, RabbitMQ, Service Bus, etc.), no gRPC, and no outbound service-to-service HTTP client integrations were identified.</p>
+<p>Resilience policies such as retry, circuit breaker, timeout, or bulkhead are not configured through Polly/Resilience libraries. Error handling is centralized in <code>BlogController.OnException</code>, which maps anti-forgery failures to 400, not-found/business errors to 4xx, DB constraint failures to 409, and unexpected faults to 500 with generic error view output.</p>
+<p>Service discovery, client-side load balancing, and API gateway patterns are absent because this is a single deployable service. Startup API availability depends on successful DB initialization/bootstrap (<code>CreateDatabaseIfNotExists</code> + <code>Bootstrap.Initialize</code>) during <code>Application_Start</code>; invalid first-run admin credentials fail startup before endpoints become usable.</p>
+<p>Security posture: authentication uses OWIN cookie auth (<code>BlogCookie</code>) with login/logout endpoints; authorization is enforced on <code>/admin/**</code> via <code>[Authorize(Roles = &quot;Admin&quot;)]</code>. <code>ValidateAntiForgeryToken</code> is applied to mutating form endpoints. TLS is not enforced in application code/config (no HTTPS redirection/HSTS setup), so transport security depends on hosting configuration.</p>
+<h2 id="service-technology-matrix">Service Technology Matrix</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Web</th><th>Data Access</th><th>Discovery</th><th>Gateway</th><th>Actuator</th><th>Cache</th><th>Metrics</th></tr></thead><tbody>
+<tr><td>LegacyBlog</td><td>ASP.NET MVC 5 (System.Web)</td><td>EF6 + ASP.NET Identity (SQL Server LocalDB)</td><td>None</td><td>None</td><td>None</td><td>None</td><td>None</td></tr>
+</tbody></table></div>
+<h2 id="service-communication-sequence">Service Communication Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant Client
+    participant PublicCtrl as "PublicController"
+    participant AdminCtrl as "AdminController"
+    participant AccountCtrl as "AccountController"
+    participant BlogSvc as "BlogService"
+    participant Repo as "BlogRepository"
+    participant EF as "EF6 BlogContext"
+    participant DB as "SQL Server LocalDB"
+    participant Auth as "OWIN Cookie Auth"
+
+    Client->>PublicCtrl: GET /posts/{slug}
+    PublicCtrl->>BlogSvc: PublicPost(slug)
+    BlogSvc->>Repo: Query post by slug + published
+    Repo->>EF: LINQ query
+    EF->>DB: SELECT Post
+    DB-->>EF: Post row
+    EF-->>Repo: Post entity
+    Repo-->>BlogSvc: Post
+    BlogSvc->>Repo: ApprovedComments(postId)
+    Repo->>EF: LINQ query
+    EF->>DB: SELECT Comments where Approved=1
+    DB-->>EF: Comment rows
+    EF-->>Repo: Comment entities
+    Repo-->>BlogSvc: Comments
+    BlogSvc-->>PublicCtrl: PostDetail model
+    PublicCtrl-->>Client: 200 Razor view
+
+    Client->>AccountCtrl: POST /account/login (LoginForm)
+    AccountCtrl->>EF: Validate user credentials
+    EF->>DB: SELECT user/password hash
+    DB-->>EF: User row
+    EF-->>AccountCtrl: Authenticated user
+    AccountCtrl->>Auth: SignIn BlogCookie + Admin role claim
+    Auth-->>Client: Set-Cookie
+
+    Client->>AdminCtrl: POST /admin/posts/{id}/publish
+    AdminCtrl->>BlogSvc: Publish(id, true)
+    BlogSvc->>Repo: Load post + Save
+    Repo->>EF: Update entity
+    EF->>DB: UPDATE Post set Published=1
+    DB-->>EF: Commit OK
+    EF-->>Repo: Saved
+    Repo-->>BlogSvc: Success
+    BlogSvc-->>AdminCtrl: Success
+    AdminCtrl-->>Client: 302 /admin/posts
+
+    alt Invalid anti-forgery token or invalid model
+        AdminCtrl-->>Client: 400 Error view / form re-render
+    else Missing resource or data conflict
+        BlogSvc-->>AdminCtrl: HttpException 404 or 409
+        AdminCtrl-->>Client: 404/409 Error view
+    end
+</div>
+</div>
+</div>
+<div id="tab-config" class="tab-panel">
+  <div class="fact-content"><h1 id="configuration-externalized-settings-inventory">Configuration &amp; Externalized Settings Inventory</h1>
+<p>The project uses XML-first configuration centered on <code>Web.config</code>, plus environment-variable overrides for credentials and connection strings. It has a small profile surface (Debug/Release build configuration, no separate runtime profile files) and handles sensitive values primarily through per-process environment variables.</p>
+<h2 id="configuration-sources">Configuration Sources</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Source</th><th>Type</th><th>Path/Location</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Application config</td><td>.NET XML config</td><td><code>LegacyBlog\Web.config</code></td><td>Primary application/runtime settings (<code>appSettings</code>, <code>connectionStrings</code>, <code>system.web</code>, <code>entityFramework</code>).</td></tr>
+<tr><td>View-engine config</td><td>.NET XML config</td><td><code>LegacyBlog\Views\Web.config</code></td><td>Razor/view-specific namespaces and handler settings.</td></tr>
+<tr><td>Package source config</td><td>NuGet config</td><td><code>NuGet.Config</code></td><td>Sets package repository path and NuGet source.</td></tr>
+<tr><td>Build/dependency manifest</td><td>MSBuild project</td><td><code>LegacyBlog\LegacyBlog.csproj</code></td><td>Build configuration defaults/conditions and assembly references.</td></tr>
+<tr><td>Package lock-style manifest</td><td>NuGet packages list</td><td><code>LegacyBlog\packages.config</code></td><td>Pins package versions for restore.</td></tr>
+<tr><td>Assessment/tooling config</td><td>YAML</td><td><code>modernize.yaml</code></td><td>Modernization assessment configuration (<code>analysisCoverage</code>, target runtime for modernization process).</td></tr>
+<tr><td>Environment variable source</td><td>Process environment</td><td><code>BLOG_DOTNET_CONNECTION_STRING</code>, <code>BLOG_ADMIN_USER</code>, <code>BLOG_ADMIN_PASSWORD</code></td><td>Used at runtime by <code>BlogContext</code> and bootstrap initialization logic.</td></tr>
+</tbody></table></div>
+<h2 id="build-profiles">Build Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation</th><th>Purpose</th><th>Key Dependencies/Plugins</th></tr></thead><tbody>
+<tr><td>Debug (default)</td><td>Automatic when <code>$(Configuration)</code> is empty (<code>Debug</code>)</td><td>Local development build defaults with full debug symbols.</td><td><code>DefineConstants=TRACE</code>, <code>DebugType=full</code>, <code>DebugSymbols=true</code>.</td></tr>
+<tr><td>Release</td><td>Manual (<code>/p:Configuration=Release</code> or IDE selection)</td><td>Optimized build output for release scenarios.</td><td><code>Optimize=true</code>, <code>DebugType=pdbonly</code>.</td></tr>
+<tr><td>AnyCPU (default platform)</td><td>Automatic when <code>$(Platform)</code> is empty (<code>AnyCPU</code>)</td><td>Default platform target.</td><td>MSBuild property in project file.</td></tr>
+</tbody></table></div>
+<h2 id="runtime-profiles">Runtime Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation Method</th><th>Config Files</th><th>Key Overrides</th></tr></thead><tbody>
+<tr><td>Default runtime</td><td>Implicit (no <code>appsettings.{Environment}.json</code> or Web.* transform files found)</td><td><code>LegacyBlog\Web.config</code></td><td>App settings, connection string, system.web and web server behavior.</td></tr>
+<tr><td>Process-level override mode</td><td>Set environment variables before process start</td><td><code>LegacyBlog\Web.config</code> + process environment</td><td><code>BLOG_DOTNET_CONNECTION_STRING</code> overrides <code>name=Blog</code>; <code>BLOG_ADMIN_USER</code>/<code>BLOG_ADMIN_PASSWORD</code> provide bootstrap admin credentials when user store is empty.</td></tr>
+</tbody></table></div>
+<h2 id="properties-inventory">Properties Inventory</h2>
+<h3 id="legacyblog">LegacyBlog</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Profiles</th><th>Source</th></tr></thead><tbody>
+<tr><td><code>webpages:Version</code></td><td><code>3.0.0.0</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>appSettings</code>)</td></tr>
+<tr><td><code>webpages:Enabled</code></td><td><code>false</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>appSettings</code>)</td></tr>
+<tr><td><code>owin:AppStartup</code></td><td><code>LegacyBlog.App_Start.Startup</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>appSettings</code>)</td></tr>
+<tr><td><code>connectionStrings:Blog</code></td><td><code>Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=LegacyBlogDotNet;Integrated Security=True;MultipleActiveResultSets=True</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>connectionStrings</code>)</td></tr>
+<tr><td><code>BLOG_DOTNET_CONNECTION_STRING</code></td><td>unset (falls back to <code>name=Blog</code>)</td><td>Process-level override mode</td><td>Environment variable (<code>BlogContext</code> constructor)</td></tr>
+<tr><td><code>compilation:debug</code></td><td><code>false</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/compilation</code>)</td></tr>
+<tr><td><code>compilation:targetFramework</code></td><td><code>4.7.2</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/compilation</code>)</td></tr>
+<tr><td><code>httpRuntime:targetFramework</code></td><td><code>4.7.2</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/httpRuntime</code>)</td></tr>
+<tr><td><code>httpRuntime:maxRequestLength</code></td><td><code>1024</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/httpRuntime</code>)</td></tr>
+<tr><td><code>httpRuntime:enableVersionHeader</code></td><td><code>false</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/httpRuntime</code>)</td></tr>
+<tr><td><code>authentication:mode</code></td><td><code>None</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/authentication</code>)</td></tr>
+<tr><td><code>customErrors:mode</code></td><td><code>On</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/customErrors</code>)</td></tr>
+<tr><td><code>customErrors:defaultRedirect</code></td><td><code>~/error</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/customErrors</code>)</td></tr>
+<tr><td><code>httpCookies:httpOnlyCookies</code></td><td><code>true</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/httpCookies</code>)</td></tr>
+<tr><td><code>httpCookies:sameSite</code></td><td><code>Lax</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.web/httpCookies</code>)</td></tr>
+<tr><td><code>system.webServer:validation:validateIntegratedModeConfiguration</code></td><td><code>false</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.webServer/validation</code>)</td></tr>
+<tr><td><code>system.webServer:httpErrors:existingResponse</code></td><td><code>PassThrough</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.webServer/httpErrors</code>)</td></tr>
+<tr><td><code>customHeaders:X-Content-Type-Options</code></td><td><code>nosniff</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.webServer/httpProtocol</code>)</td></tr>
+<tr><td><code>customHeaders:X-Frame-Options</code></td><td><code>DENY</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>system.webServer/httpProtocol</code>)</td></tr>
+<tr><td><code>entityFramework:provider:invariantName</code></td><td><code>System.Data.SqlClient</code></td><td>Default runtime</td><td><code>Web.config</code> (<code>entityFramework/providers</code>)</td></tr>
+<tr><td><code>BLOG_ADMIN_USER</code></td><td>unset (required on first startup when no users exist)</td><td>Process-level override mode</td><td>Environment variable (<code>Bootstrap.Initialize</code>)</td></tr>
+<tr><td><code>BLOG_ADMIN_PASSWORD</code></td><td>unset (required on first startup when no users exist)</td><td>Process-level override mode</td><td>Environment variable (<code>Bootstrap.Initialize</code>)</td></tr>
+<tr><td><code>NuGet:repositoryPath</code></td><td><code>packages</code></td><td>Build/restore context</td><td><code>NuGet.Config</code></td></tr>
+<tr><td><code>NuGet:packageSource:nuget.org</code></td><td><code>https://api.nuget.org/v3/index.json</code></td><td>Build/restore context</td><td><code>NuGet.Config</code></td></tr>
+</tbody></table></div>
+<h2 id="startup-parameters-resource-requirements">Startup Parameters &amp; Resource Requirements</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>JVM/Runtime Options</th><th>Memory</th><th>Instance Count</th></tr></thead><tbody>
+<tr><td>LegacyBlog (ASP.NET MVC 5 on IIS Express/full IIS host)</td><td>No JVM options (not applicable). Runtime behavior is controlled by <code>Web.config</code> and optional environment variables.</td><td>Not explicitly configured in repository artifacts.</td><td>Not explicitly configured in repository artifacts.</td></tr>
+<tr><td>SQL Server LocalDB (<code>MSSQLLocalDB</code>)</td><td>External dependency started/managed outside app config.</td><td>Not explicitly configured in repository artifacts.</td><td>Typically single local instance for development (not pinned in repo config).</td></tr>
+</tbody></table></div>
+<h2 id="startup-dependency-chain">Startup Dependency Chain</h2>
+<ol>
+<li>SQL Server LocalDB (<code>MSSQLLocalDB</code>) → must be available before the web app initializes <code>BlogContext</code> (<code>CreateDatabaseIfNotExists</code> + <code>db.Database.Initialize(false)</code>).</li>
+<li>LegacyBlog web host process (IIS Express/full IIS) → reads <code>Web.config</code>, then optionally resolves <code>BLOG_DOTNET_CONNECTION_STRING</code>.</li>
+<li>Bootstrap initialization (<code>Bootstrap.Initialize</code>) → when user store is empty, requires <code>BLOG_ADMIN_USER</code> and <code>BLOG_ADMIN_PASSWORD</code> to pass validation before startup can complete.</li>
+<li>App request handling begins → after initialization/seed checks commit successfully.</li>
+</ol>
+<p>Readiness/wait mechanism: no Compose/Kubernetes readiness probes found; startup failure is explicit through thrown exceptions during bootstrap/database initialization.</p>
+<h2 id="secrets-sensitive-configuration">Secrets &amp; Sensitive Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Secret Reference</th><th>Type</th><th>Storage (masked)</th></tr></thead><tbody>
+<tr><td><code>BLOG_ADMIN_PASSWORD</code></td><td>Admin credential secret</td><td>Environment variable (<code>[MASKED]</code>)</td></tr>
+<tr><td><code>BLOG_ADMIN_USER</code></td><td>Admin identity (sensitive account bootstrap input)</td><td>Environment variable (<code>[MASKED]</code>)</td></tr>
+<tr><td><code>BLOG_DOTNET_CONNECTION_STRING</code></td><td>Database connection string (may contain credentials in non-default usage)</td><td>Environment variable (<code>[MASKED]</code>)</td></tr>
+<tr><td><code>connectionStrings:Blog</code></td><td>Database connection string (default uses integrated security)</td><td><code>Web.config</code> (<code>Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=LegacyBlogDotNet;Integrated Security=True;...</code>)</td></tr>
+</tbody></table></div>
+<h3 id="secrets-provisioning-workflow">Secrets Provisioning Workflow</h3>
+<p>Secrets originate from per-process environment variables set before application startup. The web host process reads them directly through <code>Environment.GetEnvironmentVariable(...)</code>, and bootstrap logic enforces required admin credential presence/shape on first-run initialization. No external secret manager (Key Vault, Vault, AWS Secrets Manager) or managed identity/RBAC-backed secret retrieval workflow is defined in repository configuration.</p>
+<h2 id="feature-flags">Feature Flags</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Flag Name</th><th>Default</th><th>Controlled By</th></tr></thead><tbody>
+<tr><td><code>webpages:Enabled</code></td><td><code>false</code></td><td><code>Web.config</code> (<code>appSettings</code>)</td></tr>
+</tbody></table></div>
+<p>No dedicated feature-flag framework configuration (e.g., .NET FeatureManagement, LaunchDarkly, Unleash) was found.</p>
+<h2 id="framework-runtime-versions">Framework &amp; Runtime Versions</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Version</th><th>Source</th></tr></thead><tbody>
+<tr><td>.NET Framework target</td><td><code>v4.7.2</code></td><td><code>LegacyBlog.csproj</code> (<code>TargetFrameworkVersion</code>)</td></tr>
+<tr><td>C# language version</td><td><code>7.3</code></td><td><code>LegacyBlog.csproj</code> (<code>LangVersion</code>)</td></tr>
+<tr><td>ASP.NET MVC</td><td><code>5.2.9</code></td><td><code>packages.config</code> / <code>README.md</code></td></tr>
+<tr><td>Razor/WebPages</td><td><code>3.2.9</code></td><td><code>packages.config</code> / <code>README.md</code></td></tr>
+<tr><td>Entity Framework</td><td><code>6.4.4</code></td><td><code>packages.config</code> / <code>README.md</code></td></tr>
+<tr><td>ASP.NET Identity</td><td><code>2.2.4</code></td><td><code>packages.config</code> / <code>README.md</code></td></tr>
+<tr><td>OWIN components</td><td><code>4.2.2</code> (<code>Microsoft.Owin*</code>), <code>1.0</code> (<code>Owin</code>)</td><td><code>packages.config</code></td></tr>
+<tr><td>Web infrastructure package</td><td><code>2.0.0</code></td><td><code>packages.config</code></td></tr>
+<tr><td>MSBuild web targets package</td><td><code>14.0.0.3</code></td><td><code>packages.config</code></td></tr>
+<tr><td>MSBuild project tools version</td><td><code>15.0</code></td><td><code>LegacyBlog.csproj</code> (<code>ToolsVersion</code>)</td></tr>
+<tr><td>NuGet feed endpoint</td><td><code>https://api.nuget.org/v3/index.json</code></td><td><code>NuGet.Config</code></td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div id="tab-workflows" class="tab-panel">
+  <div class="fact-content"><h1 id="core-business-workflows">Core Business Workflows</h1>
+<p>LegacyBlog is a publishing and moderation application where administrators manage categories, posts, and comment approvals while public readers browse published content and submit comments. It combines editorial workflows, audience interaction, and controlled content publication in a single business domain.</p>
+<h2 id="domain-entities">Domain Entities</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Service / Bounded Context</th><th>Description</th><th>Key Relationships</th></tr></thead><tbody>
+<tr><td>BlogUser</td><td>Identity and Access</td><td>Administrator identity used to authenticate into protected editorial workflows.</td><td>Grants access to admin-only content management and moderation workflows.</td></tr>
+<tr><td>Category</td><td>Content Taxonomy</td><td>Editorial grouping used to classify posts for public browsing and filtering.</td><td>One category is associated with many posts; category usage constrains deletion.</td></tr>
+<tr><td>Post</td><td>Publishing</td><td>Core content item that moves between draft and published states.</td><td>Belongs to a category; has many comments; publication status determines public visibility.</td></tr>
+<tr><td>Comment</td><td>Community Interaction</td><td>Reader-submitted feedback attached to a post and subject to moderation.</td><td>Belongs to one post; participates in approval or deletion moderation decisions.</td></tr>
+<tr><td>SeedState</td><td>Platform Initialization</td><td>Marker for one-time sample data initialization and idempotent bootstrap.</td><td>Controls whether initial categories, posts, and comments are created again.</td></tr>
+</tbody></table></div>
+<h2 id="service-to-domain-mapping">Service-to-Domain Mapping</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Domain Context</th><th>Owned Entities</th><th>External Dependencies</th></tr></thead><tbody>
+<tr><td>PublicController + BlogService</td><td>Public Reading and Participation</td><td>Post (published subset), Category (for browsing), Comment (approved subset and submissions)</td><td>BlogRepository/BlogContext persistence layer.</td></tr>
+<tr><td>AdminController + BlogService</td><td>Editorial Management and Moderation</td><td>Post, Category, Comment (pending moderation queue)</td><td>BlogRepository/BlogContext persistence layer; authenticated admin session.</td></tr>
+<tr><td>AccountController + Bootstrap.UserManager</td><td>Identity and Session Access</td><td>BlogUser</td><td>ASP.NET Identity user store; OWIN cookie authentication.</td></tr>
+<tr><td>MvcApplication + Bootstrap.Initialize</td><td>Startup and Initial Business State</td><td>BlogUser, Category, Post, Comment, SeedState</td><td>Environment-provided admin credentials; transactional DB initialization.</td></tr>
+<tr><td>BlogRepository + BlogContext</td><td>Domain Persistence</td><td>Post, Category, Comment, BlogUser, SeedState</td><td>Entity Framework context and database.</td></tr>
+</tbody></table></div>
+<p>This project is a layered monolith rather than a distributed microservice architecture: bounded contexts exchange data through in-process service/repository calls and shared transactional storage.</p>
+<h2 id="primary-workflows">Primary Workflows</h2>
+<h3 id="workflow-1-public-reader-views-and-comments-on-a-published-post">Workflow 1: Public reader views and comments on a published post</h3>
+<p>Entry points: <code>GET /</code>, <code>GET /categories/{slug}</code>, <code>GET /posts/{slug}</code>, <code>POST /posts/{slug}/comments</code>.</p>
+<ol>
+<li>Public reader requests the post list or a post detail page.</li>
+<li><code>BlogService.List</code> validates page input, resolves optional category filter, and returns only published posts for public routes.</li>
+<li>For post detail, <code>BlogService.PublicPost</code> enforces visibility by requiring <code>Published = true</code>; unpublished or missing posts are rejected.</li>
+<li><code>BlogService.ApprovedComments</code> includes only approved comments in the public view.</li>
+<li>When submitting a comment, <code>CommentForm</code> validation gates the operation; invalid input returns to the detail view with validation errors.</li>
+<li>On valid input, <code>BlogService.Comment</code> creates a new comment as pending approval (<code>Approved = false</code>) and persists it.</li>
+</ol>
+<p>Business rules involved: published-only visibility, positive numeric paging, category existence, form validation, moderation-before-public-display.</p>
+<h3 id="workflow-2-administrator-creates-edits-publishes-and-deletes-posts">Workflow 2: Administrator creates, edits, publishes, and deletes posts</h3>
+<p>Entry points: <code>GET /admin/posts</code>, <code>GET/POST /admin/posts/create</code>, <code>GET/POST /admin/posts/{id}/edit</code>, <code>POST /admin/posts/{id}/publish</code>, <code>POST /admin/posts/{id}/unpublish</code>, <code>GET/POST /admin/posts/{id}/delete</code>.</p>
+<ol>
+<li>Authenticated admin opens the posts management view.</li>
+<li>On create/edit submit, controller and form validation enforce required post shape (<code>PostForm</code>) and valid category selection.</li>
+<li><code>BlogService.SavePost</code> checks slug uniqueness (<code>PostSlugTaken</code>) and either creates a new draft or updates an existing post.</li>
+<li>Publication actions toggle publish state via <code>BlogService.Publish</code>, which sets or clears publication timestamp and updates modification time.</li>
+<li>Delete action removes the selected post; associated comments are removed through relationship behavior in persistence.</li>
+</ol>
+<p>Business rules involved: unique slugs, category existence, draft vs published state transition, timestamp updates on state mutation.</p>
+<h3 id="workflow-3-administrator-manages-categories-and-moderates-reader-comments">Workflow 3: Administrator manages categories and moderates reader comments</h3>
+<p>Entry points: <code>GET /admin/categories</code>, <code>GET/POST /admin/categories/create</code>, <code>GET/POST /admin/categories/{id}/edit</code>, <code>POST /admin/categories/{id}/delete</code>, <code>GET /admin/comments</code>, <code>POST /admin/comments/{id}/approve</code>, <code>POST /admin/comments/{id}/delete</code>.</p>
+<ol>
+<li>Admin manages category records through create/edit forms.</li>
+<li><code>BlogService.SaveCategory</code> enforces unique category slugs before persistence.</li>
+<li>Category deletion checks usage (<code>CategoryInUse</code>); categories linked to posts cannot be removed.</li>
+<li>Admin opens pending comments queue.</li>
+<li>Each comment is either approved (visible publicly) or deleted (removed permanently) via <code>BlogService.Moderate</code>.</li>
+</ol>
+<p>Business rules involved: unique category slug, category-delete guard when referenced by posts, moderation decision (approve vs delete).</p>
+<h3 id="workflow-4-first-start-bootstrap-initializes-admin-and-sample-business-data">Workflow 4: First-start bootstrap initializes admin and sample business data</h3>
+<p>Entry point: application startup in <code>Application_Start</code> invoking <code>Bootstrap.Initialize</code>.</p>
+<ol>
+<li>Startup initializes the database and begins a transaction for bootstrap actions.</li>
+<li>If no users exist, bootstrap requires valid <code>BLOG_ADMIN_USER</code> and <code>BLOG_ADMIN_PASSWORD</code> values and creates the administrator account.</li>
+<li>If seed marker <code>sample-v1</code> is absent, system creates sample categories, published posts, draft posts, and initial approved/pending comments.</li>
+<li>Bootstrap stores seed marker and commits transaction to ensure idempotent initialization.</li>
+</ol>
+<p>Business rules involved: admin credential format and password length constraints, one-time seed marker guard, transactional initialization consistency.</p>
+<h2 id="cross-service-data-flows">Cross-Service Data Flows</h2>
+<p>The solution uses in-process composition across bounded contexts instead of networked service calls. Public and admin workflows pass through controller entry points into <code>BlogService</code>, which composes data from posts, categories, and comments using <code>BlogRepository</code> and returns business views (for example, post detail plus approved comments, or post lists filtered by category and publication state).</p>
+<p>Identity and content contexts intersect during admin workflows: <code>AccountController</code> issues an authenticated session for a <code>BlogUser</code>, and <code>[Authorize(Roles = &quot;Admin&quot;)]</code> gates editorial and moderation workflows before content mutations are allowed.</p>
+<p>Business degradation behavior is handled as rejection paths instead of circuit-breaker fallbacks: invalid or conflicting operations produce business-safe outcomes (e.g., invalid form redisplay, 404 for missing/private content, 409 for uniqueness or referential conflicts) rather than partial cross-service responses.</p>
+<h2 id="business-workflow-sequence">Business Workflow Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant Reader
+    participant Public as "PublicController"
+    participant BlogSvc as "BlogService"
+    participant Repo as "BlogRepository"
+    participant DB as "BlogContext Database"
+    participant Admin
+    participant AdminCtrl as "AdminController"
+
+    Reader->>Public: Submit comment on post slug
+    Public->>BlogSvc: Verify post is public
+    BlogSvc->>Repo: Query published post by slug
+    Repo->>DB: Load post and category
+    DB-->>Repo: Post data
+    Repo-->>BlogSvc: Post entity
+    BlogSvc-->>Public: Post is available
+
+    Public->>Public: Validate CommentForm
+    alt Valid comment input
+        Public->>BlogSvc: Create pending comment
+        BlogSvc->>Repo: Add comment with Approved=false
+        Repo->>DB: Persist comment
+        DB-->>Repo: Save success
+        Repo-->>BlogSvc: Stored comment
+        BlogSvc-->>Public: Comment accepted
+        Public-->>Reader: Redirect to post detail
+    else Invalid comment input
+        Public-->>Reader: Return post detail with errors
+    end
+
+    Admin->>AdminCtrl: Review pending comments
+    AdminCtrl->>BlogSvc: Load moderation queue
+    BlogSvc->>Repo: Query comments where Approved=false
+    Repo->>DB: Read pending comments
+    DB-->>Repo: Pending comments
+    Repo-->>BlogSvc: Queue results
+    BlogSvc-->>AdminCtrl: Pending list
+    AdminCtrl-->>Admin: Display moderation queue
+
+    Admin->>AdminCtrl: Approve or delete comment
+    alt Approve
+        AdminCtrl->>BlogSvc: Moderate(delete=false)
+        BlogSvc->>Repo: Mark comment Approved=true
+        Repo->>DB: Save status change
+    else Delete
+        AdminCtrl->>BlogSvc: Moderate(delete=true)
+        BlogSvc->>Repo: Remove comment
+        Repo->>DB: Delete record
+    end
+    DB-->>Repo: Save success
+    Repo-->>BlogSvc: Moderation persisted
+    BlogSvc-->>AdminCtrl: Operation complete
+    AdminCtrl-->>Admin: Redirect to pending queue
+</div>
+<h2 id="business-rules-decision-logic">Business Rules &amp; Decision Logic</h2>
+<ol>
+<li><strong>Validation rules</strong></li>
+</ol>
+<ul>
+<ul>
+<li><code>PostForm</code>: title required, slug required with lowercase-hyphen pattern, body required, category required and positive.</li>
+<li><code>CategoryForm</code>: name required, slug required with lowercase-hyphen pattern.</li>
+<li><code>CommentForm</code>: author and body required with length limits.</li>
+<li><code>LoginForm</code>: username and password required with length constraints.</li>
+<li>Pagination input must be a positive integer and within range (<code>BlogService.List</code>).</li>
+</ul>
+</ul>
+<ol>
+<li><strong>Decision logic</strong></li>
+</ol>
+<ul>
+<ul>
+<li>Public visibility decision: only posts marked published are accessible on public routes.</li>
+<li>Moderation decision: comment is either approved (retained and made public) or deleted.</li>
+<li>Category deletion decision: blocked when any post references that category.</li>
+</ul>
+</ul>
+<ol>
+<li><strong>State transitions</strong></li>
+</ol>
+<ul>
+<ul>
+<li>Post lifecycle: draft (<code>Published=false</code>) to published (<code>Published=true</code>, <code>PublishedAt</code> set), and published back to draft (<code>PublishedAt</code> cleared).</li>
+<li>Comment lifecycle: pending (<code>Approved=false</code>) to approved (<code>Approved=true</code>) or deleted.</li>
+</ul>
+</ul>
+<ol>
+<li><strong>Business constraints</strong></li>
+</ol>
+<ul>
+<ul>
+<li>Post slug and category slug must be unique.</li>
+<li>Post creation/update requires an existing category.</li>
+<li>First startup requires valid admin bootstrap credentials; initialization fails fast when invalid.</li>
+<li>Seed data executes once based on <code>SeedState</code> marker.</li>
+</ul>
+</ul>
+<ol>
+<li><strong>Computed and integrity behavior</strong></li>
+</ol>
+<ul>
+<ul>
+<li>Post list ordering and paging are computed from publication date and page size.</li>
+<li>Publication and update timestamps are maintained during post mutations.</li>
+<li>Referential integrity rules enforce category-post and post-comment relationships; deletion outcomes align with these relationships.</li>
+</ul>
+</ul>
+<ol>
+<li><strong>Transactions, errors, authorization</strong></li>
+</ol>
+<ul>
+<ul>
+<li>Bootstrap initialization runs in one transaction to keep startup state consistent.</li>
+<li>Business rejections surface as HTTP 400/404/409 style outcomes via controller exception handling.</li>
+<li>Admin workflows require authenticated role-based access (<code>Admin</code> role claim).</li>
+</ul>
+</ul>
+</div>
+</div>
+<div id="tab-deps" class="tab-panel">
+  <div class="fact-content"><h1 id="dependency-map">Dependency Map</h1>
+<p>This map covers the LegacyBlog .NET project and its declared external dependencies from <code>packages.config</code> and <code>LegacyBlog.csproj</code>. A total of 13 declared packages were detected (12 runtime/application dependencies and 1 build-time dependency).</p>
+<h2 id="dependencies">Dependencies</h2>
+<div class="mermaid">
+flowchart LR
+    App["LegacyBlog Application"]
+
+    subgraph Web["Web Frameworks"]
+        AspNetMvc["Microsoft AspNet Mvc v5.2.9"]
+        AspNetRazor["Microsoft AspNet Razor v3.2.9"]
+        AspNetWebPages["Microsoft AspNet WebPages v3.2.9"]
+        WebInfra["Microsoft Web Infrastructure v2.0.0"]
+    end
+
+    subgraph DB["Database / ORM"]
+        EntityFramework["EntityFramework v6.4.4"]
+    end
+
+    subgraph Security["Security"]
+        IdentityCore["Microsoft AspNet Identity Core v2.2.4"]
+        IdentityEf["Microsoft AspNet Identity EntityFramework v2.2.4"]
+        OwinSecurity["Microsoft Owin Security v4.2.2"]
+        OwinCookies["Microsoft Owin Security Cookies v4.2.2"]
+    end
+
+    subgraph Util["Utilities"]
+        OwinCore["Microsoft Owin v4.2.2"]
+        OwinHost["Microsoft Owin Host SystemWeb v4.2.2"]
+        OwinAbstraction["Owin v1.0"]
+        VsWebTargets["MSBuild Microsoft VisualStudio Web targets v14.0.0.3"]
+    end
+
+    App -->|"web"| Web
+    App -->|"persistence"| DB
+    App -->|"security"| Security
+    App -->|"utilities"| Util
+
+    OwinSecurity -.->|"pipeline"| OwinCore
+    OwinCookies -.->|"auth middleware"| OwinSecurity
+    OwinHost -.->|"hosting"| OwinCore
+</div>
+<h3 id="dependency-summary">Dependency Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Category</th><th>Count</th><th>Key Libraries</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Web Frameworks</td><td>4</td><td>Microsoft AspNet Mvc 5.2.9, Microsoft AspNet Razor 3.2.9</td><td>Classic ASP.NET MVC 5 stack on .NET Framework</td></tr>
+<tr><td>Database / ORM</td><td>1</td><td>EntityFramework 6.4.4</td><td>EF6 with SQL Server provider configuration</td></tr>
+<tr><td>Security</td><td>4</td><td>Microsoft AspNet Identity Core 2.2.4, Microsoft Owin Security 4.2.2</td><td>Cookie auth and identity built on OWIN middleware</td></tr>
+<tr><td>Utilities</td><td>4</td><td>Microsoft Owin 4.2.2, Owin 1.0</td><td>Includes one build-time package for VS web targets</td></tr>
+</tbody></table></div>
+<h3 id="version-compatibility-risks">Version &amp; Compatibility Risks</h3>
+<p>The application targets .NET Framework 4.7.2, which is legacy and limits modernization options compared with .NET (Core) 6/8+ runtimes. ASP.NET MVC 5.x, OWIN 4.x, and Entity Framework 6.x are mature but legacy-era technologies; migration to ASP.NET Core and EF Core typically requires authentication pipeline, middleware, and data-access refactoring.</p>
+<h3 id="notable-observations">Notable Observations</h3>
+<ul>
+<li>No modern observability, logging facade, or distributed tracing packages are declared, suggesting reliance on framework defaults or custom logging.</li>
+<li>The stack mixes <code>Owin</code> v1.0 abstraction with <code>Microsoft.Owin</code> v4.2.2 middleware components, a common legacy pattern that needs consolidation during migration.</li>
+<li><code>MSBuild.Microsoft.VisualStudio.Web.targets</code> is declared as a development dependency, indicating build coupling to older Visual Studio web targets.</li>
+<li>No messaging or caching libraries are declared, implying a primarily synchronous web-plus-database architecture.</li>
+</ul>
+<h2 id="test-dependencies">Test Dependencies</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Framework</th><th>Version</th><th>Notes</th></tr></thead><tbody>
+<tr><td>None detected</td><td>N/A</td><td>No test-scoped dependencies found in analyzed manifests</td></tr>
+</tbody></table></div>
+<p>Total test-scope dependencies: 0  </p>
+<p>No test dependencies were detected in the project manifests, so test infrastructure appears either absent or located outside this project.</p>
+</div>
+</div>
+<div id="tab-data" class="tab-panel">
+  <div class="fact-content"><h1 id="data-architecture-persistence-layer">Data Architecture &amp; Persistence Layer</h1>
+<p>The data layer is implemented with Entity Framework 6 (<code>IdentityDbContext&lt;BlogUser&gt;</code>) over SQL Server, with a small domain model centered on <code>Category</code>, <code>Post</code>, <code>Comment</code>, and seed/identity tables. Persistence is code-first with an explicit create-if-missing initializer and startup seed routine.</p>
+<h2 id="database-configuration">Database Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service/Module</th><th>DB Type</th><th>Profile</th><th>Driver</th><th>Connection</th><th>Migration Tool</th></tr></thead><tbody>
+<tr><td>LegacyBlog (ASP.NET MVC monolith)</td><td>SQL Server (LocalDB by default)</td><td>Default/runtime local profile</td><td><code>System.Data.SqlClient</code> via EF6 SQL Server provider</td><td>Named connection (<code>Blog</code>) in <code>LegacyBlog\Web.config</code>; <code>BlogContext</code> can override with <code>BLOG_DOTNET_CONNECTION_STRING</code> env var for per-environment DB targeting</td><td>No active migration framework configured. Schema is created with EF6 <code>CreateDatabaseIfNotExists</code>; seed data is applied in <code>Bootstrap.Initialize</code> with <code>SeedState</code> marker <code>sample-v1</code>.</td></tr>
+</tbody></table></div>
+<h2 id="data-ownership-per-service">Data Ownership per Service</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Tables Owned</th><th>ORM Framework</th><th>Caching</th><th>Notes</th></tr></thead><tbody>
+<tr><td>LegacyBlog (single web app)</td><td><code>Categories</code>, <code>Posts</code>, <code>Comments</code>, <code>SeedStates</code>, ASP.NET Identity tables (<code>AspNetUsers</code>, <code>AspNetRoles</code>, <code>AspNetUserClaims</code>, <code>AspNetUserLogins</code>, <code>AspNetUserRoles</code>)</td><td>Entity Framework 6 (<code>DbContext</code> + <code>IdentityDbContext</code>)</td><td>None detected</td><td>Single shared database for domain and identity data; no schema-per-module split.</td></tr>
+</tbody></table></div>
+<h2 id="entity-model">Entity Model</h2>
+<div class="mermaid">
+erDiagram
+    Category ||--o{ Post : "categorizes"
+    Post ||--o{ Comment : "has"
+
+    Category {
+        int Id PK
+        string Name
+        string Slug UK "unique slug"
+    }
+
+    Post {
+        int Id PK
+        string Title
+        string Slug UK "unique slug"
+        string Body
+        bool Published
+        datetime CreatedAt
+        datetime UpdatedAt
+        datetime PublishedAt
+        int CategoryId FK
+    }
+
+    Comment {
+        int Id PK
+        string Author
+        string Body
+        bool Approved
+        datetime CreatedAt
+        int PostId FK
+    }
+
+    SeedState {
+        string Id PK "seed marker id"
+    }
+
+    BlogUser {
+        string Id PK
+        string UserName UK "identity username"
+        string PasswordHash
+        string SecurityStamp
+    }
+</div>
+<h2 id="key-repository-methods">Key Repository Methods</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Repository</th><th>Notable Methods</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>LegacyBlog</td><td><code>BlogRepository</code> (<code>LegacyBlog\Repositories\BlogRepository.cs</code>)</td><td><code>IQueryable&lt;Post&gt; Posts</code> (<code>Include(p =&gt; p.Category)</code>), <code>IQueryable&lt;Comment&gt; Comments</code> (<code>Include(c =&gt; c.Post)</code>), <code>IQueryable&lt;Category&gt; Categories</code></td><td>Exposes composable query roots with eager loading for related entities to avoid per-row lazy lookups in service-layer queries.</td></tr>
+<tr><td>LegacyBlog</td><td><code>BlogRepository</code> (<code>LegacyBlog\Repositories\BlogRepository.cs</code>)</td><td><code>Add(Post/Category/Comment)</code>, <code>Remove(Post/Category/Comment)</code>, <code>Save()</code></td><td>Write orchestration and unit-of-work commit boundary for CRUD operations.</td></tr>
+</tbody></table></div>
+<h2 id="caching-strategy">Caching Strategy</h2>
+<p>No explicit caching provider or cache abstraction is configured. No <code>MemoryCache</code>, distributed cache, Redis, EF second-level cache, or cache annotations were found. Data access follows direct EF query execution (cache-aside/read-through patterns are not implemented).</p>
+<h2 id="data-ownership-boundaries">Data Ownership Boundaries</h2>
+<p>The application uses a <strong>shared single database</strong> pattern inside one deployable monolith. Domain tables and ASP.NET Identity tables are managed by the same EF context family (<code>BlogContext</code>/<code>IdentityDbContext</code>) and connection target. Cross-module access is in-process through repository queryables (not cross-service API/database federation). Read/write behavior is traditional CRUD with the same model for reads and writes (no CQRS split).</p>
+<h3 id="data-classification-sensitivity">Data Classification &amp; Sensitivity</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Sensitive Fields</th><th>Classification (PII/PHI/PCI/None)</th><th>Controls in Place</th></tr></thead><tbody>
+<tr><td><code>BlogUser</code></td><td><code>UserName</code>, <code>PasswordHash</code></td><td>PII</td><td>Passwords are stored as hashes by ASP.NET Identity; no field-level masking/encryption settings declared in this project.</td></tr>
+<tr><td><code>Comment</code></td><td><code>Author</code></td><td>PII</td><td>No masking or field-level access controls found.</td></tr>
+<tr><td><code>Post</code></td><td><code>Title</code>, <code>Body</code></td><td>None</td><td>No special controls required for content fields.</td></tr>
+<tr><td><code>Category</code></td><td><code>Name</code>, <code>Slug</code></td><td>None</td><td>No special controls required for taxonomy fields.</td></tr>
+<tr><td><code>SeedState</code></td><td><code>Id</code></td><td>None</td><td>Technical seed marker only.</td></tr>
+</tbody></table></div>
+</div>
+</div>
+<p class="footer">Your feedback is invaluable &mdash; <a href="https://aka.ms/ghcp-appmod/feedback">Share feedback</a></p>
+<script>
+function toggleRow(rowId, triggerRow) {
+  var detail = document.getElementById(rowId);
+  var btn = document.getElementById('btn-' + rowId);
+  if (!detail) return;
+  var visible = detail.style.display !== 'none';
+  detail.style.display = visible ? 'none' : 'table-row';
+  if (btn) btn.classList.toggle('open', !visible);
+}
+(function() {
+  var nav = document.querySelector('.tab-nav');
+  if (!nav) return;
+  nav.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    var targetId = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById(targetId);
+    if (panel) {
+      panel.classList.add('active');
+      // Render any mermaid diagrams in this panel that haven't been processed yet
+      if (window.__mermaidReady) { window.__renderMermaidIn(panel); }
+    }
+  });
+})();
+
+// ── Diagram lightbox ────────────────────────────────────────
+(function() {
+  var lightbox = document.getElementById('diagram-lightbox');
+  var inner = document.getElementById('diagram-lightbox-inner');
+  var closeBtn = document.getElementById('diagram-lightbox-close');
+  if (!lightbox || !inner || !closeBtn) return;
+
+  var scale = 1;
+  var translateX = 0;
+  var translateY = 0;
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragStartY = 0;
+
+  function applyTransform() {
+    var svg = inner.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      svg.style.transformOrigin = 'center center';
+      svg.style.transition = 'none';
+    }
+  }
+
+  function resetTransform() {
+    scale = 1; translateX = 0; translateY = 0;
+    applyTransform();
+  }
+
+  function openLightbox(svgEl) {
+    inner.innerHTML = svgEl.outerHTML;
+    var injected = inner.querySelector('svg');
+    if (injected) {
+      injected.removeAttribute('width');
+      injected.removeAttribute('height');
+      injected.style.cursor = 'grab';
+    }
+    resetTransform();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    inner.innerHTML = '';
+    document.body.style.overflow = '';
+    resetTransform();
+  }
+
+  inner.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+    scale = Math.min(Math.max(scale * delta, 0.3), 8);
+    applyTransform();
+  }, { passive: false });
+
+  inner.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStartX = e.clientX - translateX;
+    dragStartY = e.clientY - translateY;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grabbing'; }
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    translateX = e.clientX - dragStartX;
+    translateY = e.clientY - dragStartY;
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grab'; }
+  });
+
+  inner.addEventListener('dblclick', function() { resetTransform(); });
+
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.mermaid');
+    if (!card) return;
+    if (e.target.closest('.diagram-lightbox-close')) return;
+    var svg = card.querySelector('svg');
+    if (svg) { openLightbox(svg); }
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) { closeLightbox(); }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeLightbox(); }
+  });
+})();
+
+var _currentTarget = '';
+
+function toggleMultiSelect(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  // Close others
+  document.querySelectorAll('.multi-select.open').forEach(function(ms) { if (ms.id !== id) ms.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.multi-select')) {
+    document.querySelectorAll('.multi-select.open').forEach(function(ms) { ms.classList.remove('open'); });
+  }
+});
+
+function getMultiSelectValues(msId) {
+  var el = document.getElementById(msId);
+  if (!el) return [];
+  var checked = el.querySelectorAll('input[type=checkbox]:checked');
+  var vals = [];
+  for (var i = 0; i < checked.length; i++) vals.push(checked[i].value);
+  return vals;
+}
+
+function onMultiSelectChange(msId, label) {
+  var el = document.getElementById(msId);
+  if (!el) return;
+  var vals = getMultiSelectValues(msId);
+  var total = el.querySelectorAll('input[type=checkbox]').length;
+  var btn = el.querySelector('.multi-select-btn');
+  if (btn) {
+    btn.textContent = vals.length > 0 && vals.length < total ? label + ' (' + vals.length + ')' : label;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  var selectedDomains = getMultiSelectValues('domain-ms');
+  var selectedCrits = getMultiSelectValues('criticality-ms');
+
+  // Domain filter: show/hide entire sections (empty = show all)
+  var sections = document.querySelectorAll('.issue-section');
+  for (var i = 0; i < sections.length; i++) {
+    var domain = sections[i].getAttribute('data-domain');
+    sections[i].style.display = (selectedDomains.length === 0 || selectedDomains.indexOf(domain) >= 0) ? '' : 'none';
+  }
+
+  // Row-level filtering: respect target + criticality
+  var rows = document.querySelectorAll('.issue-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var section = row.closest('.issue-section');
+    if (section && section.style.display === 'none') {
+      row.style.display = 'none';
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('detail-row')) next.style.display = 'none';
+      continue;
+    }
+
+    // Check target filter
+    var show = true;
+    if (_currentTarget && row.hasAttribute('data-targets')) {
+      var targetsStr = row.getAttribute('data-targets');
+      if (targetsStr && targetsStr !== '{}') {
+        try {
+          var targets = JSON.parse(targetsStr);
+          if (Object.keys(targets).length > 0 && !targets[_currentTarget]) {
+            show = false;
+          }
+        } catch(e) {}
+      }
+    }
+
+    // Check criticality filter
+    if (show && selectedCrits.length > 0) {
+      var crit = row.getAttribute('data-criticality');
+      if (selectedCrits.indexOf(crit) < 0) show = false;
+    }
+
+    row.style.display = show ? '' : 'none';
+    var nextRow = row.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('detail-row')) {
+      if (!show) nextRow.style.display = 'none';
+    }
+  }
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('.multi-select input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  var domainBtn = document.querySelector('#domain-ms .multi-select-btn');
+  if (domainBtn) domainBtn.textContent = 'Domain';
+  var critBtn = document.querySelector('#criticality-ms .multi-select-btn');
+  if (critBtn) critBtn.textContent = 'Criticality';
+  applyFilters();
+}
+
+function onTargetChange(targetId) {
+  _currentTarget = targetId;
+  var rows = document.querySelectorAll('.issue-row[data-targets]');
+  var totalEffort = 0;
+  var domainCrits = {}; // domain -> {mandatory:0, potential:0, optional:0}
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var targets = JSON.parse(row.getAttribute('data-targets'));
+    var section = row.closest('.issue-section');
+    var domain = section ? section.getAttribute('data-domain') : '';
+
+    if (!targets || Object.keys(targets).length === 0) {
+      // No target data (e.g. security) — always show
+      var sp = parseFloat(row.querySelector('.sp-cell').textContent) || 0;
+      totalEffort += sp;
+      if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+      var crit = row.getAttribute('data-criticality') || 'optional';
+      domainCrits[domain][crit] = (domainCrits[domain][crit] || 0) + 1;
+      continue;
+    }
+
+    var override = targets[targetId];
+    if (!override) {
+      // Issue doesn't apply to this target
+      continue;
+    }
+
+    // Apply severity override
+    var newSeverity = (override.severity || row.getAttribute('data-default-severity') || '').toLowerCase();
+    row.setAttribute('data-criticality', newSeverity);
+    var critCell = row.querySelector('.crit-cell');
+    if (critCell) {
+      var critText = newSeverity === 'mandatory' ? 'Mandatory' : newSeverity === 'potential' ? 'Potential' : 'Optional';
+      var cssClass = newSeverity === 'mandatory' ? 'crit-square-mandatory' : newSeverity === 'potential' ? 'crit-square-potential' : 'crit-square-optional';
+      critCell.innerHTML = '<span class="crit-label"><span class="crit-square ' + cssClass + '"></span>' + critText + '</span>';
+    }
+
+    // Apply effort override
+    var newEffort = override.effort !== undefined ? override.effort : parseFloat(row.getAttribute('data-default-effort')) || 0;
+    var spCell = row.querySelector('.sp-cell');
+    if (spCell) spCell.textContent = newEffort;
+    totalEffort += newEffort;
+
+    if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+    domainCrits[domain][newSeverity] = (domainCrits[domain][newSeverity] || 0) + 1;
+  }
+
+  // Also add security findings effort (they don't have per-target data)
+  var secSection = document.querySelector('.issue-section[data-domain="security"]');
+  if (secSection) {
+    var secRows = secSection.querySelectorAll('.issue-row');
+    for (var j = 0; j < secRows.length; j++) {
+      if (!secRows[j].hasAttribute('data-targets') || secRows[j].getAttribute('data-targets') === '') {
+        var sp = parseFloat(secRows[j].querySelector('.sp-cell').textContent) || 0;
+        totalEffort += sp;
+        if (!domainCrits['security']) domainCrits['security'] = {mandatory:0,potential:0,optional:0};
+        var sc = secRows[j].getAttribute('data-criticality') || 'optional';
+        domainCrits['security'][sc] = (domainCrits['security'][sc] || 0) + 1;
+      }
+    }
+  }
+
+  // Update effort display
+  var label = totalEffort < 20 ? 'S' : totalEffort < 50 ? 'M' : totalEffort < 100 ? 'L' : 'XL';
+  var effortEl = document.getElementById('effort-display');
+  if (effortEl) effortEl.textContent = label + ' (total story points: ' + totalEffort + ')';
+
+  // Update donut charts
+  updateDonuts(domainCrits);
+
+  // Re-apply domain/criticality filters
+  applyFilters();
+}
+
+function updateDonuts(domainCrits) {
+  var container = document.getElementById('donut-container');
+  if (!container) return;
+  container.innerHTML = '';
+  var domainNames = {'cloud-readiness':'Cloud Readiness','java-upgrade':'Java Upgrade','dotnet-upgrade':'DotNET Upgrade','security':'Security'};
+  var domainOrder = ['cloud-readiness','java-upgrade','dotnet-upgrade','security'];
+  for (var d = 0; d < domainOrder.length; d++) {
+    var key = domainOrder[d];
+    var c = domainCrits[key];
+    if (!c || (c.mandatory + c.potential + c.optional) === 0) continue;
+    var total = c.mandatory + c.potential + c.optional;
+    var div = document.createElement('div');
+    div.className = 'domain-summary-item';
+    div.innerHTML = buildDonutSvg(c.mandatory, c.potential, c.optional) +
+      '<h3>' + domainNames[key] + '</h3>' +
+      '<div class="count">' + total + ' issue' + (total !== 1 ? 's' : '') + '</div>';
+    container.appendChild(div);
+  }
+}
+
+function buildDonutSvg(m, p, o) {
+  var total = m + p + o;
+  if (total === 0) return '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;"><circle cx="50" cy="50" r="35" fill="none" stroke="#d0d7de" stroke-width="15" opacity="0.5"/></svg>';
+  var r = 35, circ = 2 * Math.PI * r, offset = 0;
+  var svg = '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">';
+  var segs = [{c:m,color:'var(--color-mandatory)'},{c:p,color:'var(--color-potential)'},{c:o,color:'var(--color-optional)'}];
+  for (var i = 0; i < segs.length; i++) {
+    if (segs[i].c === 0) continue;
+    var segLen = (segs[i].c / total) * circ;
+    var gap = total > segs[i].c ? 1.5 : 0;
+    var drawLen = Math.max(segLen - gap, 0.5);
+    svg += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + segs[i].color + '" stroke-width="15" stroke-dasharray="' + drawLen.toFixed(2) + ' ' + circ.toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '"/>';
+    offset += segLen;
+  }
+  svg += '</svg>';
+  return svg;
+}
+</script>
+<script>document.addEventListener('DOMContentLoaded', function() { onTargetChange('AppService.Windows'); });</script>
+</div></body></html>

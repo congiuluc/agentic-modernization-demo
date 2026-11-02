@@ -22,7 +22,14 @@ $pages = [ordered]@{
     'docs/JAVA-MODERNIZATION.md' = 'java/index.md'
     'dotnet/README.md' = 'dotnet/setup/index.md'
     'java/README.md' = 'java/setup/index.md'
+    'demo/assets/dotnet/README.md' = 'dotnet/examples/index.md'
+    'demo/assets/dotnet/dotnet-blog-upgrade/plan.md' = 'dotnet/examples/plan/index.md'
 }
+$demoAssets = @(
+    'demo/assets/dotnet/assessment/reports-20261022070217/index.html'
+    'demo/assets/dotnet/assessment/reports-20261022070217/repos/dotnet/report.html'
+    'demo/assets/dotnet/video/GHC-Modernize-Demo.mp4'
+)
 $aliases = @{
     'README.md' = 'docs/MODERNIZATION.md'
     'dotnet' = 'dotnet/README.md'
@@ -34,6 +41,8 @@ $metadata = @{
     'docs/JAVA-MODERNIZATION.md' = @{ Title = 'Java modernization'; Key = 'java'; Section = 'Application modernization'; Action = 'Start modernization'; Description = 'Assess, plan, approve, execute, and validate the Java blog modernization with Modernize CLI. Legacy setup is an optional first step.' }
     'dotnet/README.md' = @{ Title = '.NET local setup'; Key = 'dotnet-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build and run the .NET Framework 4.7.2 legacy baseline on Windows with MVC 5, EF6, IIS Express, and seeded LocalDB data.' }
     'java/README.md' = @{ Title = 'Java application setup'; Key = 'java-setup'; Section = 'Optional baseline setup'; Action = 'Open the setup guide'; Description = 'Build, run, and verify the Java 11 Spring MVC baseline with Maven, Tomcat 9, and persistent H2 storage.' }
+    'demo/assets/dotnet/README.md' = @{ Title = '.NET demo examples'; Key = 'dotnet-examples'; Section = 'Demo examples'; Action = 'Explore the examples'; Description = 'Watch the demo video and review recorded LegacyBlog assessment findings, the local-only modernization plan, and task summaries. Historical examples, not current validation evidence.' }
+    'demo/assets/dotnet/dotnet-blog-upgrade/plan.md' = @{ Title = '.NET example modernization plan'; Key = 'dotnet-example-plan'; Section = 'Demo examples'; Action = 'Read the plan'; Description = 'A recorded plan comparing .NET Framework servicing with .NET 10 and ASP.NET Core MVC migration, including compatibility, rollback, and acceptance gates.' }
 }
 
 foreach ($page in $pages.GetEnumerator()) {
@@ -65,10 +74,22 @@ foreach ($page in $pages.GetEnumerator()) {
         } elseif ($pages.Contains($path)) {
             $sitePath = '/' + ($pages[$path] -replace 'index\.md$', '')
             $url = '{{ "' + $sitePath + '" | relative_url }}' + $suffix
+        } elseif ($demoAssets -contains $path) {
+            $url = '{{ "/' + $path + '" | relative_url }}' + $suffix
         } else {
             $url = "$repository/blob/$Revision$($resolved.AbsolutePath)$suffix"
         }
         return "[$($match.Groups['label'].Value)]($url)"
+    })
+    $content = [regex]::Replace($content, '(?<prefix><video\b[^>]*\bsrc=")(?<target>[^"]+)(?<suffix>")', {
+        param($match)
+        $resolved = [uri]::new($sourceUri, $match.Groups['target'].Value)
+        $path = [uri]::UnescapeDataString($resolved.AbsolutePath.Trim('/'))
+        if ($demoAssets -notcontains $path) {
+            throw "Unpublished video source in $($page.Key): $($match.Groups['target'].Value)"
+        }
+        $url = '{{ "/' + $path + '" | relative_url }}' + $resolved.Query + $resolved.Fragment
+        return $match.Groups['prefix'].Value + $url + $match.Groups['suffix'].Value
     })
 
     $output = Join-Path $destination $page.Value
@@ -89,6 +110,11 @@ foreach ($page in $pages.GetEnumerator()) {
 $presentation = Join-Path $destination 'presentation'
 New-Item -ItemType Directory -Force -Path $presentation | Out-Null
 Copy-Item -LiteralPath (Join-Path $root 'docs/presentation.html') -Destination (Join-Path $presentation 'index.html')
+foreach ($file in $demoAssets) {
+    $output = Join-Path $destination $file
+    New-Item -ItemType Directory -Force -Path (Split-Path $output -Parent) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $root $file) -Destination $output
+}
 foreach ($file in @('_layouts/docs.html', 'assets/site.css', 'assets/site.js')) {
     $output = Join-Path $destination $file
     New-Item -ItemType Directory -Force -Path (Split-Path $output -Parent) | Out-Null
@@ -98,4 +124,4 @@ foreach ($file in @('_layouts/docs.html', 'assets/site.css', 'assets/site.js')) 
 $config = Get-Content -Raw -LiteralPath (Join-Path $root 'docs\_config.yml')
 $config += "`nbaseurl: $($BasePath | ConvertTo-Json -Compress)`nurl: $($SiteUrl | ConvertTo-Json -Compress)`nrepository_url: $($repository | ConvertTo-Json -Compress)`n"
 Set-Content -LiteralPath (Join-Path $destination '_config.yml') -Encoding utf8NoBOM -Value $config
-Write-Host "Generated $($pages.Count) documentation pages and the HTML presentation in $destination"
+Write-Host "Generated $($pages.Count) documentation pages, $($demoAssets.Count) demo assets, and the HTML presentation in $destination"

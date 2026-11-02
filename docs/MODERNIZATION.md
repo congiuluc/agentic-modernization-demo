@@ -20,6 +20,7 @@ Choose your path through the repository:
 | --- | --- |
 | Understand the agent and this repository | [14-slide HTML presentation](presentation.html) |
 | Modernize the .NET application | [.NET modernization](DOTNET-MODERNIZATION.md) |
+| Show resulting assessment and plan artifacts | [Recorded .NET demo examples](../demo/assets/dotnet/README.md) |
 | Modernize the Java application | [Java modernization](JAVA-MODERNIZATION.md) |
 | Understand the shared CLI stages | [Guided modernization workflow](#modernization-workflow) |
 | Use a browser-based modernization workspace | [GitHub Codespaces](#using-github-codespaces) |
@@ -607,12 +608,13 @@ Bind the servers to loopback. Local HTTP cookies are intentionally usable withou
 
 ## Documentation website (GitHub Pages)
 
-The [Publish documentation workflow](../.github/workflows/pages.yml) builds and deploys a Jekyll site with five guides and a presentation:
+The [Publish documentation workflow](../.github/workflows/pages.yml) builds and deploys a Jekyll site with five guides, recorded .NET demo examples, and a presentation:
 
 - This guide as the site's main modernization page.
 - The [.NET modernization workflow](DOTNET-MODERNIZATION.md), published at `dotnet/`.
 - The [Java modernization workflow](JAVA-MODERNIZATION.md), published at `java/`.
 - The optional [.NET local setup](../dotnet/README.md) and [Java setup](../java/README.md), linked from step 1 of their modernization workflows and published at `dotnet/setup/` and `java/setup/`.
+- The [recorded .NET demo walkthrough](../demo/assets/dotnet/README.md) at `dotnet/examples/`, including the [demo video](../demo/assets/dotnet/video/GHC-Modernize-Demo.mp4), its [full plan](../demo/assets/dotnet/dotnet-blog-upgrade/plan.md) at `dotnet/examples/plan/`, and the selected HTML assessment dashboard and application report.
 - The self-contained [HTML presentation](presentation.html), published at the site's `presentation/` path.
 
 The [documentation build script](../scripts/Build-Docs.ps1) generates the site source from those files, so documentation changes only need to be made once. Links between the guides stay within the site, while source-file links point to the corresponding GitHub commit. Repository-specific Pages URL prefixes are handled automatically.
@@ -630,7 +632,7 @@ The site uses a custom [documentation layout](_layouts/docs.html), [stylesheet](
 
 Shared features include a responsive navigation bar with a GitHub link to the repository's `main` branch, light/dark themes, an active table of contents, keyboard focus/skip links, and copy controls for code examples. The repository link follows the repository URL supplied to the build. The presentation shares the same visual language while keeping all its styles and scripts inside a single offline-capable file.
 
-The site title and description are configured in [_config.yml](_config.yml). The build stages only the five maintained guides, the presentation, the layout/assets, and site configuration; application source, build outputs, databases, and modernization session state are not copied. The generated site source is recreated on every build to avoid retaining stale assets. Generated source and HTML are ignored by Git; authored layouts, assets, and the presentation remain tracked.
+The site title and description are configured in [_config.yml](_config.yml). The build stages only the five maintained guides, the selected demo walkthrough and plan, two recorded HTML assessment reports, the MP4 demo video, the presentation, the layout/assets, and site configuration. The video player does not autoplay or preload the recording. Other recorded artifacts remain linked to the corresponding GitHub commit; application source, build outputs, databases, and active modernization session state are not copied. The generated site source is recreated on every build to avoid retaining stale assets. Generated source and HTML are ignored by Git; authored layouts, assets, and the presentation remain tracked.
 
 The workflow builds on a GitHub-hosted Linux runner using PowerShell 7 and the official Jekyll/Pages actions. No local Ruby installation is required to publish the site.
 
